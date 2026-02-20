@@ -1,75 +1,70 @@
-if __name__ == "__main__":
-    import json
-    try:
-        import core
-    except TypeError:
-        import core_legacy as core
-    from PIL import Image
-    import os
+import argparse as ap
+from textwrap import dedent
 
-    print("# NEA Viewer - Imagemapper")
-    print()
+try:
+    import core
+except TypeError:
+    import core_legacy as core
 
-    id = None
-    while id is None:
-        id = input("Enter ID: ")
-        try:
-            id = int(id)
-            
-            print(f"Fetching info for {id}...")
-            print()
-            features = core.get_features(id)
 
-            if features["data"]["images"]["features"] is None:
-                print("Wrong Image ID; Not Found")
-                id = None
-            else:
-                break
-        except ValueError:
-            print("Wrong format.")
-            id = None
-
-    #with open("features.json", "w") as f:
-    #    json.dump(features, f, indent=2)
-    
-    feature = features["data"]["images"]["features"][0]
-
-    print(f">> Image name: {feature['properties']['imagepath']}")
-    print(f">> Image date: {feature['properties']['bildflugdatum']}")
-
-    print()
-
+def prompt_zoom_level(min: int, max: int) -> int:
     zoom = None
     while zoom is None:
-        zoom = input(f"Enter Zoom-Level ({feature['properties']['image_minzoom']}-{feature['properties']['image_maxzoom']}): ")
+        zoom = input(f"Enter Zoom-Level ({min}-{max}): ")
         try:
             zoom = int(zoom)
-            break
+            if zoom < min or zoom > max:
+                raise ValueError()
+
+            return zoom
         except ValueError:
             print("Wrong zoom-level.")
             zoom = None
 
-    (image_width, image_height), tile_list = core.construct_all_meta(feature, zoom)
+
+def fixed_zoom_level(level: int):
+    def zoom_level_callback(min: int, max: int):
+        if level < min or level > max:
+            raise ValueError(
+                f"The specified zoom level is not supported by this image. Min: {min}, Max: {max}"
+            )
+
+        return level
+
+    return zoom_level_callback
+
+
+if __name__ == "__main__":
+    parser = ap.ArgumentParser(
+        formatter_class=ap.RawDescriptionHelpFormatter,
+        description=dedent(
+            """
+        Downloads an Image by ID from https://nea.geofly.eu.
+        If not arguments are set, values will be prompted for interactively.
+        """
+        ),
+    )
+    parser.add_argument("-i", "--id", type=int, required=False, help="Image ID.")
+    parser.add_argument("-z", "--zoom", type=int, required=False, help="Zoom level.")
+    args = parser.parse_args()
+
+    print("# NEA Viewer - Imagemapper")
     print()
-    print(f">> Final image size: {image_width}x{image_height}")
-    print(f">> Tilecount: {len(tile_list)}")
-    print()
-    try:
-        input("Press Enter to download or Ctrl+C to exit now or anytime during download.")
-    except KeyboardInterrupt:
-        print()
-        print("Exited.")
-        exit()
-    print()
-    img = core.download_all(((image_width, image_height), tile_list))
-    path_n = f'output_{id}_{zoom}'
-    path = path_n
-    i = 2
-    while os.path.exists(path + ".jpg"):
-        path = f"{path_n} ({i})"
-        i += 1
-    path += ".jpg"
-    img.convert('RGB').save(path, quality=95)
-    print(f"Saved to {path}")
-    
-    print("\nDone")
+
+    image_id = None
+    while image_id is None:
+        image_id = args.id or input("Enter ID: ")
+        try:
+            image_id = int(image_id)
+            core.main(
+                image_id,
+                fixed_zoom_level(args.zoom) if args.zoom else prompt_zoom_level,
+                prompt_interrupt=not (args.id and args.zoom),
+            )
+
+            break
+        except ValueError:
+            if args.id:
+                break
+            print("Try again.")
+            image_id = None
