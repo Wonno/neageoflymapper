@@ -17,7 +17,7 @@ start.bat
 
 ## Installation & Start (Linux)
 Python 3 is required. (Should work with all major versions)
-```
+```sh
 git clone https://github.com/fabyr/neageoflymapper.git
 cd neageoflymapper
 python3 -m venv env
@@ -38,3 +38,18 @@ use the Devtools of a browser as follows (Can usually be opened by pressing `F12
 3. Upon selection of a `Circle` on the map, the corresponding Network request showing the ID should appear.\
    ![Filter](/assets/image3.png)\
    In this Case the ID is `55345746`. This is the ID to enter in the program.
+
+## CLI
+You can call the python file directly with some arguments to skip interactive prompting:
+```
+$ python main.py -h
+usage: main.py [-h] [-i ID] [-z ZOOM]
+
+Downloads an Image by ID from https://nea.geofly.eu.
+If not arguments are set, values will be prompted for interactively.
+
+options:
+  -h, --help            show this help message and exit
+  -i ID, --id ID        Image ID.
+  -z ZOOM, --zoom ZOOM  Zoom level.
+```
