@@ -48,23 +48,28 @@ if __name__ == "__main__":
     parser.add_argument("-z", "--zoom", type=int, required=False, help="Zoom level.")
     args = parser.parse_args()
 
+    is_interactive = not bool(args.id)
+
     print("# NEA Viewer - Imagemapper")
     print()
 
     image_id = None
-    while image_id is None:
-        image_id = args.id or input("Enter ID: ")
+    while True:
         try:
+            image_id = args.id or input("Enter ID: ")
             image_id = int(image_id)
             core.main(
                 image_id,
                 fixed_zoom_level(args.zoom) if args.zoom else prompt_zoom_level,
                 prompt_interrupt=not (args.id and args.zoom),
             )
-
+        except KeyboardInterrupt:
             break
         except ValueError:
-            if args.id:
+            if not is_interactive:
                 break
             print("Try again.")
             image_id = None
+
+        if not is_interactive:
+            break
