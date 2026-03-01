@@ -1,4 +1,5 @@
 import argparse as ap
+import sys
 from textwrap import dedent
 
 import core
@@ -15,12 +16,24 @@ def prompt_zoom_level(min: int, max: int) -> int:
 
             return zoom
         except ValueError:
-            print("Wrong zoom-level.")
+            print("Wrong zoom-level.", file=sys.stderr)
             zoom = None
 
 
-def fixed_zoom_level(level: int):
+def fixed_zoom_level(fixed_level: str):
     def zoom_level_callback(min: int, max: int):
+        if fixed_level.lower() == "max":
+            level = max
+            print(f"Using max zoom level: {level}", file=sys.stderr)
+        elif fixed_level.lower() == "min":
+            level = min
+            print(f"Using min zoom level: {level}", file=sys.stderr)
+        else:
+            try:
+                level = int(fixed_level)
+            except ValueError as ve:
+                raise ValueError(f"Invalid zoom level '{fixed_level}'.") from ve
+
         if level < min or level > max:
             raise ValueError(
                 f"The specified zoom level is not supported by this image. Min: {min}, Max: {max}"
@@ -36,19 +49,25 @@ if __name__ == "__main__":
         formatter_class=ap.RawDescriptionHelpFormatter,
         description=dedent(
             """
-        Downloads an Image by ID from https://nea.geofly.eu.
-        If not arguments are set, values will be prompted for interactively.
-        """
+            Downloads an Image by ID from https://nea.geofly.eu.
+            If not arguments are set, values will be prompted for interactively.
+            """
         ),
     )
     parser.add_argument("-i", "--id", type=int, required=False, help="Image ID.")
-    parser.add_argument("-z", "--zoom", type=int, required=False, help="Zoom level.")
+    parser.add_argument(
+        "-z",
+        "--zoom",
+        type=str,
+        required=False,
+        help="Zoom level. You can specify 'max' or 'min' to use the highest/lowest zoom level for any image.",
+    )
     args = parser.parse_args()
 
     is_interactive = not bool(args.id)
 
-    print("# NEA Viewer - Imagemapper")
-    print()
+    print("# NEA Viewer - Imagemapper", file=sys.stderr)
+    print(file=sys.stderr)
 
     image_id = None
     while True:
@@ -62,10 +81,11 @@ if __name__ == "__main__":
             )
         except KeyboardInterrupt:
             break
-        except ValueError:
+        except ValueError as e:
+            print(str(e), file=sys.stderr)
             if not is_interactive:
                 break
-            print("Try again.")
+            print("Try again.", file=sys.stderr)
             image_id = None
 
         if not is_interactive:

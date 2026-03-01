@@ -132,7 +132,7 @@ def geo_info(feature: dict):
         geo_corners(GK4/EPSG:31468)=({str.join(", ", [
             f"{x} {y}" for x, y in corner_coords_gk4
         ])})
-    """
+        """
     ).strip()
 
 
