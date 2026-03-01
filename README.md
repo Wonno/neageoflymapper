@@ -51,5 +51,6 @@ If not arguments are set, values will be prompted for interactively.
 options:
   -h, --help            show this help message and exit
   -i ID, --id ID        Image ID.
-  -z ZOOM, --zoom ZOOM  Zoom level.
+  -z ZOOM, --zoom ZOOM  Zoom level. You can specify 'max' or 'min' to use the highest/lowest zoom level for
+                        any image.
 ```
