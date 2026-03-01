@@ -1,17 +1,23 @@
+from __future__ import annotations
+
 import os
 import re
 import sys
+import traceback
 from collections.abc import Callable
 from math import ceil
+from textwrap import dedent
 from urllib.parse import quote, urlencode
 
 import requests
 from PIL import Image
 
+from coords import to_epsg3857, to_epsg4326, to_epsg31468
+
 REQUEST_TIMEOUT = 8
 
 
-def get_features(id: str | int) -> dict:
+def get_features(id: int) -> dict:
     params = {
         "bild_id": str(id),
     }
@@ -89,6 +95,47 @@ def clean_filename(filename: str):
     return re.sub(r"[\x00-\x1f<>:\"/\\|?*]", "-", filename)
 
 
+def geo_info(feature: dict):
+    center_crs = feature["quickview"]["center"]["crs"]["properties"]["name"]
+    center_coords = feature["quickview"]["center"]["coordinates"]
+
+    assert len(center_coords) == 2
+
+    corner_crs = feature["geometry"]["crs"]["properties"]["name"]
+    corner_coords = feature["geometry"]["coordinates"][0]
+
+    assert 4 <= len(corner_coords) <= 5
+
+    # remove last entry (equals first)
+    if len(corner_coords) == 5:
+        corner_coords = corner_coords[:-1]
+
+    corner_coords_gk4 = [to_epsg31468(corner_crs, coord) for coord in corner_coords]
+    corner_coords_wgs84 = [to_epsg3857(corner_crs, coord) for coord in corner_coords]
+    corner_coords_wgs84g = [to_epsg4326(corner_crs, coord) for coord in corner_coords]
+
+    center_coords_gk4 = to_epsg31468(center_crs, center_coords)
+    center_coords_wgs84 = to_epsg3857(center_crs, center_coords)
+    center_coords_wgs84g = to_epsg4326(center_crs, center_coords)
+
+    return dedent(
+        f"""
+        geo_center(WGS84/EPSG:4326; lat, lon)={center_coords_wgs84g[1]}, {center_coords_wgs84g[0]}
+        geo_center(WGS84 Pseudo/EPSG:3857)={center_coords_wgs84[0]}, {center_coords_wgs84[1]}
+        geo_center(GK4/EPSG:31468)={center_coords_gk4[0]}, {center_coords_gk4[1]}
+        geo_corners(WGS84/EPSG:4326; lat, lon)=({str.join(", ", [
+            f"{y} {x}" for x, y in corner_coords_wgs84g
+        ])})
+        geo_corners(WGS84 Pseudo/EPSG:3857)=({str.join(", ", [
+            f"{x} {y}" for x, y in corner_coords_wgs84
+        ])})
+        geo_corners(GK4/EPSG:31468)=({str.join(", ", [
+            f"{x} {y}" for x, y in corner_coords_gk4
+        ])})
+    """
+    ).strip()
+
+
 def main(
     image_id: int,
     zoom_level_callback: Callable[[int, int], int],
@@ -124,6 +171,35 @@ def main(
     print(f">> Final image size: {image_width}x{image_height}")
     print(f">> Tilecount: {len(tile_list)}")
     print()
+
+    def image_metadata_text():
+        geo_info_text = ""
+        try:
+            geo_info_text = geo_info(feature)
+        except:
+            print(
+                f"Warning: Could not determine geo info metadata:\n{traceback.format_exc()}",
+                file=sys.stderr,
+            )
+
+        return (
+            dedent(
+                f"""
+                id={image_id}
+                name={image_name}
+                location={image_location}
+                date={image_date}
+                %(geo_info_text)s
+                width={image_width}
+                height={image_height}
+                zoom_level={zoom}
+                """
+            ).strip()
+            % {
+                "geo_info_text": geo_info_text,
+            }
+        )
+
     if prompt_interrupt:
         try:
             input(
@@ -145,9 +221,14 @@ def main(
     while os.path.exists(path + ".jpg"):
         path = f"{output_name} ({i})"
         i += 1
-    path += ".jpg"
 
-    img.convert("RGB").save(path, quality=95)
+    image_path = f"{path}.jpg"
+    metadata_path = f"{path}.txt"
 
-    print(f"\nSaved to {path}")
+    img.convert("RGB").save(image_path, quality=95)
+    with open(metadata_path, "w", encoding="utf-8") as fp:
+        fp.write(image_metadata_text())
+        fp.write("\n")
+
+    print(f"\nSaved to {image_path}")
     print("Done")

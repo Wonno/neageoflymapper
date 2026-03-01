@@ -1,10 +1,7 @@
 import argparse as ap
 from textwrap import dedent
 
-try:
-    import core
-except TypeError:
-    import core_legacy as core
+import core
 
 
 def prompt_zoom_level(min: int, max: int) -> int:

@@ -1,5 +1,6 @@
 env/
 __pycache__/
-*.jpg
-*.json
+/*.jpg
+/*.txt
+/*.json
 *.zip
