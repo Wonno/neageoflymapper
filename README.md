@@ -27,6 +27,13 @@ python -m pip install -r requirements.txt
 python main.py
 ```
 
+## Binary Build
+Needs to be run separately for Linux and Windows.
+
+```sh
+pyinstaller --onefile --name neageoflymapper main.py
+```
+
 ## Usage
 In order to find the ID of an Image,
 use the Devtools of a browser as follows (Can usually be opened by pressing `F12`):
