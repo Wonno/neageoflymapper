@@ -8,6 +8,7 @@ from collections.abc import Callable
 from math import ceil
 from textwrap import dedent
 from urllib.parse import quote, urlencode
+from rich.progress import Progress
 
 import requests
 from PIL import Image
@@ -62,25 +63,26 @@ def download_all(meta: tuple[tuple[int, int], list]) -> Image:
     image_size, tile_list = meta
     img = Image.new("RGBA", image_size, 0)
 
-    try:
-        for i, (x, y, url) in enumerate(tile_list):
-            print(
-                f"Downloading Tile #{i+1} of {len(tile_list)} [{url}]", file=sys.stderr
-            )
+    with Progress() as p:
+        t = p.add_task("Downloading...", total=100)
+        while not p.finished:
             try:
-                with requests.get(
-                    url, stream=True, timeout=REQUEST_TIMEOUT
-                ) as tile_response:
-                    tile_response.raise_for_status()
-                    with Image.open(tile_response.raw) as tile:
-                        img.paste(tile, box=(x, y))
+                for i, (x, y, url) in enumerate(tile_list):
+                    p.update(t, advance=i/len(tile_list)*100)
+                    print(f"Downloading Tile #{i + 1} of {len(tile_list)} [{url}]", file=sys.stderr)
+                    try:
+                        with requests.get(
+                            url, stream=True, timeout=REQUEST_TIMEOUT
+                        ) as tile_response:
+                            tile_response.raise_for_status()
+                            with Image.open(tile_response.raw) as tile:
+                                img.paste(tile, box=(x, y))
+                    except KeyboardInterrupt:
+                        raise
+                    except Exception as e:
+                        print(f"Tile #{i + 1} failed: {e}")
             except KeyboardInterrupt:
-                raise
-            except Exception as e:
-                print(f"Tile #{i+1} failed: {e}")
-    except KeyboardInterrupt:
-        print("Interrupting download.")
-
+                print("Interrupting download.")
     return img
 
 
