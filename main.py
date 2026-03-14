@@ -1,6 +1,6 @@
 import argparse as ap
-import sys
 from textwrap import dedent
+from rich.console import Console
 
 import core
 
@@ -16,7 +16,7 @@ def prompt_zoom_level(min: int, max: int) -> int:
 
             return zoom
         except ValueError:
-            print("Wrong zoom-level.", file=sys.stderr)
+            console.print("Wrong zoom-level.")
             zoom = None
 
 
@@ -24,10 +24,10 @@ def fixed_zoom_level(fixed_level: str):
     def zoom_level_callback(min: int, max: int):
         if fixed_level.lower() == "max":
             level = max
-            print(f"Using max zoom level: {level}", file=sys.stderr)
+            console.print(f"Using max zoom level: {level}")
         elif fixed_level.lower() == "min":
             level = min
-            print(f"Using min zoom level: {level}", file=sys.stderr)
+            console.print(f"Using min zoom level: {level}")
         else:
             try:
                 level = int(fixed_level)
@@ -66,8 +66,8 @@ if __name__ == "__main__":
 
     is_interactive = not bool(args.id)
 
-    print("# NEA Viewer - Imagemapper", file=sys.stderr)
-    print(file=sys.stderr)
+    console = Console()
+    console.print("NEA Viewer - Imagemapper", style="bold red")
 
     image_id = None
     while True:
@@ -82,10 +82,10 @@ if __name__ == "__main__":
         except KeyboardInterrupt:
             break
         except ValueError as e:
-            print(str(e), file=sys.stderr)
+            console.print(str(e))
             if not is_interactive:
                 break
-            print("Try again.", file=sys.stderr)
+            console.print("Try again.")
             image_id = None
 
         if not is_interactive:

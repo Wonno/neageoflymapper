@@ -2,16 +2,18 @@ from __future__ import annotations
 
 import os
 import re
-import sys
 import traceback
 from collections.abc import Callable
 from math import ceil
 from textwrap import dedent
 from urllib.parse import quote, urlencode
+
+from rich.console import Console
 from rich.progress import Progress
 
 import requests
 from PIL import Image
+from rich.table import Table
 
 from coords import to_epsg3857, to_epsg4326, to_epsg31468
 
@@ -63,13 +65,14 @@ def download_all(meta: tuple[tuple[int, int], list]) -> Image:
     image_size, tile_list = meta
     img = Image.new("RGBA", image_size, 0)
 
+    console = Console()
     with Progress() as p:
         t = p.add_task("Downloading...", total=100)
         while not p.finished:
             try:
                 for i, (x, y, url) in enumerate(tile_list):
-                    p.update(t, advance=i/len(tile_list)*100)
-                    print(f"Downloading Tile #{i + 1} of {len(tile_list)} [{url}]", file=sys.stderr)
+                    p.update(t, completed=(i+1)/len(tile_list)*100,
+                             description=f"Downloading Tile #{i + 1} of {len(tile_list)} [{url}]")
                     try:
                         with requests.get(
                             url, stream=True, timeout=REQUEST_TIMEOUT
@@ -80,9 +83,10 @@ def download_all(meta: tuple[tuple[int, int], list]) -> Image:
                     except KeyboardInterrupt:
                         raise
                     except Exception as e:
-                        print(f"Tile #{i + 1} failed: {e}")
+                        console.print(f"Downloading Tile #{i + 1} failed: {e}")
             except KeyboardInterrupt:
-                print("Interrupting download.")
+                p.remove_task(t)
+                console.print("\n :stop_button: Interrupting download.")
     return img
 
 
@@ -143,12 +147,13 @@ def main(
     zoom_level_callback: Callable[[int, int], int],
     prompt_interrupt: bool = True,
 ):
-    print(f"Fetching info for {image_id}...")
-    print()
+    console = Console()
+    console.print(f"Fetching info for {image_id}...")
+    console.print()
 
     features = get_features(image_id)
     if features["data"]["images"]["features"] is None:
-        print("Wrong Image ID; Not Found")
+        console.print("Wrong Image ID; Not Found")
         raise ValueError()
 
     feature = features["data"]["images"]["features"][0]
@@ -156,33 +161,28 @@ def main(
     image_location = feature["properties"]["gemeinde"]
     image_name = get_image_name_from_feature(feature)
     image_date = feature["properties"]["bildflugdatum"]
-
-    print(f">> Image name: {image_name}")
-    print(f">> Image location: {image_location}")
-    print(f">> Image date: {image_date}")
-
-    print()
-
     zoom = zoom_level_callback(
         int(feature["properties"]["image_minzoom"]),
         int(feature["properties"]["image_maxzoom"]),
     )
-
     (image_width, image_height), tile_list = construct_all_meta(feature, zoom)
-    print()
-    print(f">> Final image size: {image_width}x{image_height}")
-    print(f">> Tilecount: {len(tile_list)}")
-    print()
+
+    table = Table(show_header=False)
+    table.add_column("Key")
+    table.add_column("Value")
+    table.add_row("Image name", f"{image_name}")
+    table.add_row("Image location", f"{image_location}")
+    table.add_row("Image date", f"{image_date}")
+    table.add_row("Image dimension",f"{image_width}x{image_height}")
+    table.add_row("Tilecount",f"{len(tile_list)}")
+    console.print(table)
 
     def image_metadata_text():
         geo_info_text = ""
         try:
             geo_info_text = geo_info(feature)
         except:
-            print(
-                f"Warning: Could not determine geo info metadata:\n{traceback.format_exc()}",
-                file=sys.stderr,
-            )
+            console.print(f":warning: Could not determine geo info metadata:\n{traceback.format_exc()}")
 
         return (
             dedent(
@@ -208,11 +208,8 @@ def main(
                 "Press Enter to download or Ctrl+C to exit now or anytime during download."
             )
         except KeyboardInterrupt:
-            print()
-            print("Exited.")
+            console.print("\nExited.")
             return
-
-        print()
 
     img = download_all(((image_width, image_height), tile_list))
     output_name = f"{image_name}_{image_date}_{image_location}_{image_id}_{zoom}"
@@ -232,5 +229,4 @@ def main(
         fp.write(image_metadata_text())
         fp.write("\n")
 
-    print(f"\nSaved to {image_path}")
-    print("Done")
+    console.print(f"\n:floppy_disk:  Saved to [i]{image_path}[/i]")
