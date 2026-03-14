@@ -1,3 +1,7 @@
-requests
-pillow
-pyproj
+certifi==2026.2.25
+charset-normalizer==3.4.5
+idna==3.11
+pillow==12.1.1
+pyproj==3.7.2
+requests==2.32.5
+urllib3==2.6.3
