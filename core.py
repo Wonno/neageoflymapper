@@ -161,11 +161,9 @@ def main(
     image_location = feature["properties"]["gemeinde"]
     image_name = get_image_name_from_feature(feature)
     image_date = feature["properties"]["bildflugdatum"]
-    zoom = zoom_level_callback(
-        int(feature["properties"]["image_minzoom"]),
-        int(feature["properties"]["image_maxzoom"]),
-    )
-    (image_width, image_height), tile_list = construct_all_meta(feature, zoom)
+    image_spectral = feature["properties"]["spektralekanaele"]
+    image_available = feature["properties"]["image_available"] == 'true'
+    image_origin = feature["properties"]["herkunft_der_luftbilder"]
 
     table = Table(show_header=False)
     table.add_column("Key")
@@ -173,9 +171,23 @@ def main(
     table.add_row("Image name", f"{image_name}")
     table.add_row("Image location", f"{image_location}")
     table.add_row("Image date", f"{image_date}")
-    table.add_row("Image dimension",f"{image_width}x{image_height}")
-    table.add_row("Tilecount",f"{len(tile_list)}")
+    table.add_row("Spectral channel", f"{image_spectral}")
+    table.add_row("Available", ":green_circle" if image_available else ":red_circle:")
+    table.add_row("Origin", f"{image_origin}")
+
+    if image_available:
+        zoom = zoom_level_callback(
+            int(feature["properties"]["image_minzoom"]),
+            int(feature["properties"]["image_maxzoom"]),
+        )
+        (image_width, image_height), tile_list = construct_all_meta(feature, zoom)
+        table.add_row("Image dimension",f"{image_width}x{image_height}")
+        table.add_row("Tilecount",f"{len(tile_list)}")
+
     console.print(table)
+
+    if not image_available:
+        return
 
     def image_metadata_text():
         geo_info_text = ""
