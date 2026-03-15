@@ -85,7 +85,7 @@ if __name__ == "__main__":
             console.print(str(e))
             if not is_interactive:
                 break
-            console.print("Try again.")
+            console.print("Try again.",style="bold red")
             image_id = None
 
         if not is_interactive:
