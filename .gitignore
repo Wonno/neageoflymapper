@@ -5,6 +5,9 @@ __pycache__/
 /*.json
 *.zip
 *.spec
+*.iml
 dist/
 cache/
 build/
+*.idea/
+
