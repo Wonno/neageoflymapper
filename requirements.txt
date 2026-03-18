@@ -1,3 +1,5 @@
 requests
 pillow
 pyproj
+fastkml
+lxml

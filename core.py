@@ -3,23 +3,22 @@ from __future__ import annotations
 import os
 import re
 import sys
-import traceback
 from collections.abc import Callable
 from math import ceil
-from textwrap import dedent
 from urllib.parse import quote, urlencode
 
 import requests
 from PIL import Image
 
-from coords import to_epsg3857, to_epsg4326, to_epsg31468
+from kmlgenerator import generator
+from metainfos import Metainfos
 
 REQUEST_TIMEOUT = 8
 
 
-def get_features(id: int) -> dict:
+def get_features(image_id: int) -> dict:
     params = {
-        "bild_id": str(id),
+        "bild_id": str(image_id),
     }
 
     response = requests.get(
@@ -31,31 +30,23 @@ def get_features(id: int) -> dict:
     return response.json()
 
 
-def construct_all_meta(
-    feature: dict,
-    for_zoom_level: int,
-):
-    """Use 1 specific feature from json["data"]["images"]["features"] (list) for parameter 'feature'"""
-    min_zoom = int(feature["properties"]["image_minzoom"])
-    max_zoom = int(feature["properties"]["image_maxzoom"])
-    if for_zoom_level < min_zoom or for_zoom_level > max_zoom:
-        raise ValueError(f"Invalid zoom level. max = {max_zoom}; min = {min_zoom}")
+def construct_all_meta(metainfos: Metainfos, for_zoom_level: int):
+    if for_zoom_level < metainfos.zoom_min or for_zoom_level > metainfos.zoom_max:
+        raise ValueError(f"Invalid zoom level. max = {metainfos.zoom_max}; min = {metainfos.zoom_min}")
 
-    image_tile_base_id = feature["properties"]["bildflugnummer"]
+    divisor = 2 ** (metainfos.zoom_max - for_zoom_level)
 
-    divisor = 2 ** (max_zoom - for_zoom_level)
+    total_width = metainfos.image_width // divisor
+    total_height = metainfos.image_height // divisor
 
-    total_width = int(feature["properties"]["image_width"] / divisor)
-    total_height = int(feature["properties"]["image_height"] / divisor)
-    imagepath = str(feature["properties"]["imagepath"])
     TILE_WIDTH, TILE_HEIGHT = (256, 256)
     result: list[tuple[int, int, str]] = []
     for y in range(ceil(total_height / TILE_HEIGHT)):
         for x in range(ceil(total_width / TILE_WIDTH)):
-            url = f"https://nea.geofly.eu/tiles/{quote(str(image_tile_base_id))}/{quote(imagepath)}/{quote(str(for_zoom_level))}/{x}/{y}.jpg"
+            url = f"https://nea.geofly.eu/tiles/{quote(str(metainfos.image_tile_base_id))}/{quote(str(metainfos.image_path))}/{quote(str(for_zoom_level))}/{x}/{y}.jpg"
             result.append((x * TILE_WIDTH, y * TILE_HEIGHT, url))
 
-    return ((total_width, total_height), result)
+    return (total_width, total_height), result
 
 
 def download_all(meta: tuple[tuple[int, int], list]) -> Image:
@@ -83,57 +74,20 @@ def download_all(meta: tuple[tuple[int, int], list]) -> Image:
 
     return img
 
-
-def get_image_name_from_feature(feature: dict):
-    name = feature["properties"]["bilddateiname"]
-    matches = re.findall(r"\d+", name)
-
-    return "_".join(matches[1:4])
-
-
 def clean_filename(filename: str):
     return re.sub(r"[\x00-\x1f<>:\"/\\|?*]", "-", filename)
 
 
-def geo_info(feature: dict):
-    center_crs = feature["quickview"]["center"]["crs"]["properties"]["name"]
-    center_coords = feature["quickview"]["center"]["coordinates"]
+def determine_outputname(m: Metainfos, zoom: int) -> str:
+    output_name = f"{m.image_name}_{m.image_date}_{m.image_location}_{m.image_id}_{zoom}"
+    output_name = clean_filename(output_name)
 
-    assert len(center_coords) == 2
-
-    corner_crs = feature["geometry"]["crs"]["properties"]["name"]
-    corner_coords = feature["geometry"]["coordinates"][0]
-
-    assert 4 <= len(corner_coords) <= 5
-
-    # remove last entry (equals first)
-    if len(corner_coords) == 5:
-        corner_coords = corner_coords[:-1]
-
-    corner_coords_gk4 = [to_epsg31468(corner_crs, coord) for coord in corner_coords]
-    corner_coords_wgs84 = [to_epsg3857(corner_crs, coord) for coord in corner_coords]
-    corner_coords_wgs84g = [to_epsg4326(corner_crs, coord) for coord in corner_coords]
-
-    center_coords_gk4 = to_epsg31468(center_crs, center_coords)
-    center_coords_wgs84 = to_epsg3857(center_crs, center_coords)
-    center_coords_wgs84g = to_epsg4326(center_crs, center_coords)
-
-    return dedent(
-        f"""
-        geo_center(WGS84/EPSG:4326; lat, lon)={center_coords_wgs84g[1]}, {center_coords_wgs84g[0]}
-        geo_center(WGS84 Pseudo/EPSG:3857)={center_coords_wgs84[0]}, {center_coords_wgs84[1]}
-        geo_center(GK4/EPSG:31468)={center_coords_gk4[0]}, {center_coords_gk4[1]}
-        geo_corners(WGS84/EPSG:4326; lat, lon)=({str.join(", ", [
-            f"{y} {x}" for x, y in corner_coords_wgs84g
-        ])})
-        geo_corners(WGS84 Pseudo/EPSG:3857)=({str.join(", ", [
-            f"{x} {y}" for x, y in corner_coords_wgs84
-        ])})
-        geo_corners(GK4/EPSG:31468)=({str.join(", ", [
-            f"{x} {y}" for x, y in corner_coords_gk4
-        ])})
-        """
-    ).strip()
+    path = output_name
+    i = 2
+    while os.path.exists(path + ".jpg"):
+        path = f"{output_name} ({i})"
+        i += 1
+    return path
 
 
 def main(
@@ -150,85 +104,42 @@ def main(
         raise ValueError()
 
     feature = features["data"]["images"]["features"][0]
+    metainfos = Metainfos(image_id,feature)
 
-    image_location = feature["properties"]["gemeinde"]
-    image_name = get_image_name_from_feature(feature)
-    image_date = feature["properties"]["bildflugdatum"]
+    print(f">> Image name: {metainfos.image_name}")
+    print(f">> Image location: {metainfos.image_location}")
+    print(f">> Image date: {metainfos.image_date}")
 
-    print(f">> Image name: {image_name}")
-    print(f">> Image location: {image_location}")
-    print(f">> Image date: {image_date}")
+    zoom = zoom_level_callback(metainfos.zoom_min, metainfos.zoom_max)
+    (image_width, image_height), tile_list = construct_all_meta(metainfos, zoom)
 
-    print()
-
-    zoom = zoom_level_callback(
-        int(feature["properties"]["image_minzoom"]),
-        int(feature["properties"]["image_maxzoom"]),
-    )
-
-    (image_width, image_height), tile_list = construct_all_meta(feature, zoom)
-    print()
     print(f">> Final image size: {image_width}x{image_height}")
-    print(f">> Tilecount: {len(tile_list)}")
+    print(f">> Tile count: {len(tile_list)}")
     print()
-
-    def image_metadata_text():
-        geo_info_text = ""
-        try:
-            geo_info_text = geo_info(feature)
-        except:
-            print(
-                f"Warning: Could not determine geo info metadata:\n{traceback.format_exc()}",
-                file=sys.stderr,
-            )
-
-        return (
-            dedent(
-                f"""
-                id={image_id}
-                name={image_name}
-                location={image_location}
-                date={image_date}
-                %(geo_info_text)s
-                width={image_width}
-                height={image_height}
-                zoom_level={zoom}
-                """
-            ).strip()
-            % {
-                "geo_info_text": geo_info_text,
-            }
-        )
 
     if prompt_interrupt:
         try:
-            input(
-                "Press Enter to download or Ctrl+C to exit now or anytime during download."
-            )
+            input("Press Enter to download or Ctrl+C to exit now or anytime during download.")
         except KeyboardInterrupt:
             print()
             print("Exited.")
             return
-
         print()
 
-    img = download_all(((image_width, image_height), tile_list))
-    output_name = f"{image_name}_{image_date}_{image_location}_{image_id}_{zoom}"
-    output_name = clean_filename(output_name)
-
-    path = output_name
-    i = 2
-    while os.path.exists(path + ".jpg"):
-        path = f"{output_name} ({i})"
-        i += 1
-
+    path = determine_outputname(metainfos, zoom)
     image_path = f"{path}.jpg"
-    metadata_path = f"{path}.txt"
 
+    img = download_all(((image_width, image_height), tile_list))
     img.convert("RGB").save(image_path, quality=95)
-    with open(metadata_path, "w", encoding="utf-8") as fp:
-        fp.write(image_metadata_text())
+
+    with open(f"{path}.txt", "w", encoding="utf-8") as fp:
+        fp.write(metainfos.info_text())
         fp.write("\n")
+        fp.write( f"zoom_level={zoom}\n")
+
+    kml =generator(metainfos)
+    with open(  f"{path}.kml", "w", encoding="utf-8") as f:
+        f.write(kml.to_string(prettyprint=True))
 
     print(f"\nSaved to {image_path}")
     print("Done")
