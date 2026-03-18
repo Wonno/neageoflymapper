@@ -1,5 +1,5 @@
 @echo off
-python --version && python -m venv env && CALL env\Scripts\activate && python -m pip install --upgrade pip && python -m pip install -r requirements.txt && (
+python --version && python -m venv .venv && CALL .venv\Scripts\activate && python -m pip install --upgrade pip && python -m pip install -r requirements.txt && (
 	echo DONE
 ) || (
 	echo FAILED
