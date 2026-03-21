@@ -33,16 +33,18 @@ def generator(metainfos):
     point = pygeo.Point(x,y, 0)
     point = geometry.Point(geometry=point)
 
-    desc= f"""<![CDATA[
-              <ul>
-                <li>id: {metainfos.image_name}</li>
+    #language=HTML
+    desc= f"""<ul>
+                <li>id: {metainfos.image_id}</li>
                 <li>name: {metainfos.image_name}</li>
                 <li>location: {metainfos.image_location}</li>
                 <li>date: {metainfos.image_date}</li>
-              </ul>]]>"""
+              </ul>"""
     mg = geometry.MultiGeometry(kml_geometries=[point, line])
     pm = kml.Placemark(name=f"{metainfos.image_name}",
+                       # TODO: how to properly wrap description CDATA?
                        description=desc,
+                       # description=f"<![CDATA[{desc}]]>",
                        id=f"{metainfos.image_name}",
                        kml_geometry=mg)
     doc.append(pm)
