@@ -1,0 +1,64 @@
+name: Build
+run-name: Build
+
+on:
+  push:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - edited
+      - review_requested
+    branches:
+      - main
+
+permissions:
+    contents: read
+
+env:
+    binary-name: neageoflymapper
+
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ ubuntu-latest, windows-latest ]
+
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - uses: actions/setup-python@v6
+        with:
+         python-version: '3.12'
+         cache: 'pip'
+
+      - name: Setup venv
+        run: python -m venv .venv \
+            source .venv/Scripts/activate
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Binary build
+        run: pyinstaller --onefile --name ${{ binary-name }} main.py
+
+      - name: Upload Linux binary
+        uses: actions/upload-artifact@v7
+        if: ${{ matrix.os  == 'ubuntu-latest' }}
+        with:
+          name: ${{ matrix.os }}-binary
+          path: dist/${{ binary-name }}
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Upload Windows binary
+        uses: actions/upload-artifact@v7
+        if: ${{ matrix.os  == 'windows-latest' }}
+        with:
+          name: ${{ matrix.os }}-binary
+          path: dist/${{ binary-name }}.exe
+          if-no-files-found: error
+          retention-days: 7
