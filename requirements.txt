@@ -10,7 +10,7 @@ markdown-it-py==3.0.0
 mdurl==0.1.2
 packaging==26.0
 pefile==2024.8.26
-pillow==11.3.0
+pillow==12.1.1
 pygeoif==1.6.0
 Pygments==2.19.2
 pyinstaller==6.19.0
