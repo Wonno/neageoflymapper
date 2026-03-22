@@ -1,5 +1,7 @@
 # neageoflymapper
 
+[![Build](https://github.com/Wonno/neageoflymapper/actions/workflows/build.yaml/badge.svg)](https://github.com/Wonno/neageoflymapper/actions/workflows/build.yaml)
+
 Download a single photo from https://nea.geofly.eu/?desktop= of various zoom levels.
 (Download and stitch tiles)
 
