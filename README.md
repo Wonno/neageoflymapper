@@ -2,8 +2,7 @@
 
 [![Build](https://github.com/Wonno/neageoflymapper/actions/workflows/build.yaml/badge.svg)](https://github.com/Wonno/neageoflymapper/actions/workflows/build.yaml)
 
-Download a single photo from https://nea.geofly.eu/?desktop= of various zoom levels.
-(Download and stitch tiles)
+Download and stitch tiles to a single photo from [NEA Viewer](https://nea.geofly.eu/) of various zoom levels.
 
 ## Installation (Windows)
 Execute the file:
@@ -40,13 +39,10 @@ pyinstaller --onefile --name neageoflymapper main.py
 In order to find the ID of an Image,
 use the Devtools of a browser as follows (Can usually be opened by pressing `F12`):
 
-1. Select the `Network` or `Networking` tab\
-   ![Devtools Network Tab](/assets/image1.png)
-2. Enter `getFeature?` into the filter\
-   ![Filter](/assets/image2.png)
-3. Upon selection of a `Circle` on the map, the corresponding Network request showing the ID should appear.\
-   ![Filter](/assets/image3.png)\
-   In this Case the ID is `55345746`. This is the ID to enter in the program.
+1. Select the `Console` tab
+2. Enter `viewer.activeBildId` into the prompt and press `Enter`
+3. the ID of the currently active image will be printed in the console
+   
 
 ## CLI
 You can call the python file directly with some arguments to skip interactive prompting:
@@ -59,7 +55,7 @@ If not arguments are set, values will be prompted for interactively.
 
 options:
   -h, --help            show this help message and exit
-  -i ID, --id ID        Image ID.
+  -i ID, --id ID        single Image ID or multiple IDs separated by space
   -z ZOOM, --zoom ZOOM  Zoom level. You can specify 'max' or 'min' to use the highest/lowest zoom level for
                         any image.
 ```

@@ -54,7 +54,7 @@ if __name__ == "__main__":
             """
         ),
     )
-    parser.add_argument("-i", "--id", type=int, required=False, help="Image ID.")
+    parser.add_argument("-i", "--id", type=int, nargs="+", help="Image ID(s).")
     parser.add_argument(
         "-z",
         "--zoom",
@@ -72,13 +72,14 @@ if __name__ == "__main__":
     image_id = None
     while True:
         try:
-            image_id = args.id or input("Enter ID: ")
-            image_id = int(image_id)
-            core.main(
-                image_id,
-                fixed_zoom_level(args.zoom) if args.zoom else prompt_zoom_level,
-                prompt_interrupt=not (args.id and args.zoom),
-            )
+            for argid in args.id:
+                image_id = argid or input("Enter ID: ")
+                image_id = int(image_id)
+                core.main(
+                    image_id,
+                    fixed_zoom_level(args.zoom) if args.zoom else prompt_zoom_level,
+                    prompt_interrupt=not (args.id and args.zoom),
+                )
         except KeyboardInterrupt:
             break
         except ValueError as e:
