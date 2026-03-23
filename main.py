@@ -70,10 +70,11 @@ if __name__ == "__main__":
     console.print("NEA Viewer - Imagemapper", style="bold red")
 
     image_id = None
+    index = 0
     while True:
         try:
-            for argid in args.id:
-                image_id = argid or input("Enter ID: ")
+                image_id = input("Enter ID: ") if args.id is None else args.id[index]
+                index+=1
                 image_id = int(image_id)
                 core.main(
                     image_id,
