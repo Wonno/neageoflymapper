@@ -1,4 +1,4 @@
-# Python Hello World
+# NEA GeoFly Mapper
 
 [![Build](https://github.com/Wonno/neageoflymapper/actions/workflows/ci.yml/badge.svg)](https://github.com/Wonno/neageoflymapper/actions/workflows/ci.yml)
 [![made-with-python](https://img.shields.io/badge/Made%20with-Python-1f425f.svg)](https://www.python.org/)
