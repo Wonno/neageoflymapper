@@ -76,7 +76,7 @@ jobs:
         git tag "${{ steps.bump.outputs.new_version }}"
         git push --atomic origin main "${{ steps.bump.outputs.new_version }}"
 
-  build-and-release:
+  build:
     needs: prepare
     strategy:
       matrix:
@@ -88,13 +88,11 @@ jobs:
           - os: macos-latest
             asset_name: neageoflymapper-macos
     runs-on: ${{ matrix.os }}
-    permissions:
-      contents: write
 
     steps:
     - uses: actions/checkout@v6
       with:
-        ref: ${{ needs.prepare.outputs.tag_name }} # Checkout the newly pushed tag/commit
+        ref: ${{ needs.prepare.outputs.tag_name }}
 
     - name: Set up Python ${{ env.PYTHON_VERSION }}
       uses: actions/setup-python@v6
@@ -127,11 +125,30 @@ jobs:
           mv dist/nea-geofly-mapper dist/${{ matrix.asset_name }}
         fi
 
-    - name: Create or Update Release
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ matrix.asset_name }}
+        path: dist/${{ matrix.asset_name }}
+
+  release:
+    needs: [prepare, build]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+    - name: Download all artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: artifacts
+        merge-multiple: true
+
+    - name: Create Release and Upload Assets
       uses: softprops/action-gh-release@v2
       with:
         tag_name: ${{ needs.prepare.outputs.tag_name }}
-        files: dist/${{ matrix.asset_name }}
+        files: artifacts/*
         generate_release_notes: true
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
