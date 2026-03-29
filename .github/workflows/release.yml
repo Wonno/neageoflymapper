@@ -92,6 +92,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v6
+      with:
+        ref: ${{ needs.prepare.outputs.tag_name }} # Checkout the newly pushed tag/commit
 
     - name: Set up Python ${{ env.PYTHON_VERSION }}
       uses: actions/setup-python@v6
