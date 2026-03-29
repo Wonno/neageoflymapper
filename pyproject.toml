@@ -21,9 +21,39 @@ pygeoif = "^1.6.0"
 pytest = "^9.0.2"
 pytest-cov = "^7.1.0"
 pylint = "^4.0.5"
+pytest-github-report = "^0.0.1"
 
 [tool.poetry.group.optional.dependencies]
 pyinstaller = "^6.19.0"
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+addopts = "-cov=src"
+testpaths = [
+    "tests",
+]
+pythonpath = [
+  "src"
+]
+
+[tool.pylint.main]
+ignore = [".git", "__pycache__", "dist", "build", ".venv"]
+
+
+[tool.pylint.reports]
+output-format = "colorized"
+
+[tool.pylint.format]
+max-line-length = 120
+
+[tool.pylint.design]
+max-args = 5
+
+[tool.pylint.typecheck]
+ignored-modules = [
+    "importlib.metadata"
+]
+
 
 [build-system]
 requires = ["poetry-core"]

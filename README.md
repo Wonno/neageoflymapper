@@ -7,18 +7,18 @@
 [![GitHub latest commit](https://badgen.net/github/last-commit/Wonno/neageoflymapper)](https://github.com/Wonno/neageoflymapper/commit/)
 [![Github all releases](https://img.shields.io/github/downloads/Wonno/neageoflymapper/total.svg)](https://github.com/Wonno/neageoflymapper/releases/)
 [![GitHub stars](https://badgen.net/github/stars/Wonno/neageoflymapper)](https://github.com/Wonno/neageoflymapper/stargazers/)
-[![GitHub contributors](https://img.shields.io/github/contributors/Wonno/badges.svg)](https://github.com/Wonno/badges/graphs/contributors/)
 [![GitHub issues](https://img.shields.io/github/issues/Wonno/neageoflymapper.svg)](https://github.com/Wonno/neageoflymapper/issues/)
 [![GitHub pull-requests](https://img.shields.io/github/issues-pr/Wonno/neageoflymapper.svg)](https://github.com/Wonno/neageoflymapper/pull/)
 ![Terminal](https://badgen.net/badge/icon/terminal?icon=terminal&label)
 ![semver](https://img.shields.io/badge/semver-2.0.0-blue)
 
-    Download and stitch tiles to a single photo from [NEA Viewer](https://nea.geofly.eu/) of various zoom levels.
+------------------------------------------------------------------------------------------------------------------------
+
+Download and stitch tiles to a single photo from [NEA Viewer](https://nea.geofly.eu/) of various zoom levels.
 
 ------------------------------------------------------------------------------------------------------------------------
 
 ►  [Usage](doc/usage.md)  
-►  [Development](doc/development.md)
-►  [Contributing](CONTRIBUTING.md)
-►  [Credits](doc/credits.md)
-
+►  [Development](doc/development.md)  
+►  [Contributing](CONTRIBUTING.md)  
+►  [Credits](doc/credits.md)  

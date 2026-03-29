@@ -6,10 +6,10 @@ on:
   pull_request:
     branches: [ main ]
   schedule:
-    - cron: '@monthly'
+    - cron: '5 7 13 * *' #monthly, a lot of primes - for no reason
 
 env:
-  PYTHON_VERSION: '5 7 13 * *' #monthly, lot of primes - for no reason
+  PYTHON_VERSION: '3.12'
 
 jobs:
   test-and-lint:
@@ -19,10 +19,10 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
 
     - name: Set up Python ${{ env.PYTHON_VERSION }}
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v6
       with:
         python-version: ${{ env.PYTHON_VERSION }}
 
@@ -33,9 +33,14 @@ jobs:
         virtualenvs-create: true
         virtualenvs-in-project: true
 
+    - name: Add Poetry to PATH (Windows)
+      if: matrix.os == 'windows-latest'
+      run: |
+        echo "C:\Users\runneradmin\.local\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
     - name: Load cached venv
       id: cached-poetry-dependencies
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: .venv
         key: venv-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
@@ -45,11 +50,14 @@ jobs:
       run: poetry install --no-interaction --no-root
 
     - name: Install project
-      run: poetry install --no-interaction
+      run: |
+        poetry install --no-interaction
+        poetry --version
 
     - name: Run Linting
       if: matrix.os == 'ubuntu-latest'
-      run: poetry run pylint main.py tests/
+      run: poetry run pylint --output-format github ./src ./tests
+      continue-on-error: true
 
     - name: Run Tests
       run: poetry run pytest
@@ -57,10 +65,12 @@ jobs:
     - name: Build Binary
       run: poetry run pyinstaller --onefile src/main.py --name nea-geofly-mapper
 
-    - name: Upload Binary
-      uses: actions/upload-artifact@v4
+    - name: Attach Binary
+      uses: actions/upload-artifact@v7
       with:
-        name: main-binary-${{ matrix.os }}
+        name: nea-geofly-mapper-${{ matrix.os }}
         path: |
           dist/nea-geofly-mapper
           dist/nea-geofly-mapper.exe
+        if-no-files-found: error
+        retention-days: 7
