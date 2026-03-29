@@ -1,61 +1,24 @@
-# neageoflymapper
+# Python Hello World
 
-[![Build](https://github.com/Wonno/neageoflymapper/actions/workflows/build.yaml/badge.svg)](https://github.com/Wonno/neageoflymapper/actions/workflows/build.yaml)
+[![Build](https://github.com/Wonno/neageoflymapper/actions/workflows/ci.yml/badge.svg)](https://github.com/Wonno/neageoflymapper/actions/workflows/ci.yml)
+[![made-with-python](https://img.shields.io/badge/Made%20with-Python-1f425f.svg)](https://www.python.org/)
+[![GitHub license](https://img.shields.io/github/license/Wonno/neageoflymapper.svg)](https://github.com/Wonno/neageoflymapper/blob/main/LICENSE)
+[![GitHub release](https://img.shields.io/github/release/Wonno/neageoflymapper.svg)](https://github.com/Wonno/neageoflymapper/releases/)
+[![GitHub latest commit](https://badgen.net/github/last-commit/Wonno/neageoflymapper)](https://github.com/Wonno/neageoflymapper/commit/)
+[![Github all releases](https://img.shields.io/github/downloads/Wonno/neageoflymapper/total.svg)](https://github.com/Wonno/neageoflymapper/releases/)
+[![GitHub stars](https://badgen.net/github/stars/Wonno/neageoflymapper)](https://github.com/Wonno/neageoflymapper/stargazers/)
+[![GitHub contributors](https://img.shields.io/github/contributors/Wonno/badges.svg)](https://github.com/Wonno/badges/graphs/contributors/)
+[![GitHub issues](https://img.shields.io/github/issues/Wonno/neageoflymapper.svg)](https://github.com/Wonno/neageoflymapper/issues/)
+[![GitHub pull-requests](https://img.shields.io/github/issues-pr/Wonno/neageoflymapper.svg)](https://github.com/Wonno/neageoflymapper/pull/)
+![Terminal](https://badgen.net/badge/icon/terminal?icon=terminal&label)
+![semver](https://img.shields.io/badge/semver-2.0.0-blue)
 
-Download and stitch tiles to a single photo from [NEA Viewer](https://nea.geofly.eu/) of various zoom levels.
+    Download and stitch tiles to a single photo from [NEA Viewer](https://nea.geofly.eu/) of various zoom levels.
 
-## Installation (Windows)
-Execute the file:
-```
-setup.bat
-```
+------------------------------------------------------------------------------------------------------------------------
 
-## Start (Windows)
-Execute the file:
-```
-start.bat
-```
+►  [Usage](doc/usage.md)  
+►  [Development](doc/development.md)
+►  [Contributing](CONTRIBUTING.md)
+►  [Credits](doc/credits.md)
 
-## Installation & Start (Linux)
-Python 3 is required. (Should work with all major versions)
-```sh
-git clone https://github.com/fabyr/neageoflymapper.git
-cd neageoflymapper
-python3 -m venv env
-source env/bin/activate
-python -m pip install -r requirements.txt
-
-python main.py
-```
-
-## Binary Build
-Needs to be run separately for Linux and Windows.
-
-```sh
-pyinstaller --onefile --name neageoflymapper main.py
-```
-
-## Usage
-In order to find the ID of an Image,
-use the Devtools of a browser as follows (Can usually be opened by pressing `F12`):
-
-1. Select the `Console` tab
-2. Enter `viewer.activeBildId` into the prompt and press `Enter`
-3. the ID of the currently active image will be printed in the console
-   
-
-## CLI
-You can call the python file directly with some arguments to skip interactive prompting:
-```
-$ python main.py -h
-usage: main.py [-h] [-i ID] [-z ZOOM]
-
-Downloads an Image by ID from https://nea.geofly.eu.
-If not arguments are set, values will be prompted for interactively.
-
-options:
-  -h, --help            show this help message and exit
-  -i ID, --id ID        single Image ID or multiple IDs separated by space
-  -z ZOOM, --zoom ZOOM  Zoom level. You can specify 'max' or 'min' to use the highest/lowest zoom level for
-                        any image.
-```

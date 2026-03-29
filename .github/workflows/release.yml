@@ -1,0 +1,131 @@
+name: Manual Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_bump:
+        description: 'Semantic version bump level'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+      run_lint:
+        description: 'Run linting before release'
+        required: true
+        default: true
+        type: boolean
+
+env:
+  PYTHON_VERSION: '3.11.13'
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      tag_name: ${{ steps.bump.outputs.tag_name }}
+    permissions:
+      contents: write
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Set up Python ${{ env.PYTHON_VERSION }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Install Poetry
+      uses: snok/install-poetry@v1
+      with:
+        virtualenvs-create: true
+        virtualenvs-in-project: true
+
+    - name: Install dependencies
+      run: poetry install --no-interaction
+
+    - name: Run Tests
+      run: poetry run pytest
+
+    - name: Run Linting
+      if: ${{ github.event.inputs.run_lint == 'true' }}
+      run: poetry run pylint main.py tests/
+
+    - name: Bump Version
+      id: bump
+      run: |
+        poetry version ${{ github.event.inputs.version_bump }}
+        NEW_VERSION=$(poetry version -s)
+        echo "new_version=v$NEW_VERSION" >> $GITHUB_OUTPUT
+        echo "tag_name=v$NEW_VERSION" >> $GITHUB_OUTPUT
+
+    - name: Configure Git
+      run: |
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+    - name: Commit and Push Version Bump
+      run: |
+        git add pyproject.toml
+        git commit -m "chore: bump version to ${{ steps.bump.outputs.new_version }}"
+        git push
+
+  build-and-release:
+    needs: prepare
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            asset_name: neageoflymapper-linux
+          - os: windows-latest
+            asset_name: neageoflymapper-windows.exe
+          - os: macos-latest
+            asset_name: neageoflymapper-macos
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: write
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        ref: ${{ needs.prepare.outputs.tag_name }} # Checkout the newly pushed tag/commit
+
+    - name: Set up Python ${{ env.PYTHON_VERSION }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Install Poetry
+      uses: snok/install-poetry@v1
+      with:
+        virtualenvs-create: true
+        virtualenvs-in-project: true
+
+    - name: Install dependencies
+      run: poetry install --no-interaction
+
+    - name: Build Binary
+      run: poetry run pyinstaller --onefile neageoflymapper.py
+
+    - name: Rename binary
+      shell: bash
+      run: |
+        if [ "${{ runner.os }}" == "Windows" ]; then
+          mv dist/neageoflymapper.exe dist/${{ matrix.asset_name }}
+        else
+          mv dist/neageoflymapper dist/${{ matrix.asset_name }}
+        fi
+
+    - name: Create or Update Release
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: ${{ needs.prepare.outputs.tag_name }}
+        files: dist/${{ matrix.asset_name }}
+        generate_release_notes: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

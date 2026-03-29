@@ -1,13 +1,16 @@
+"""Metadata model and coordinate conversion helpers for aerial image features."""
+
 # pylint: disable=too-many-instance-attributes
 
 import re
+from dataclasses import dataclass
 from textwrap import dedent
 
 from coords import to_epsg31468, to_epsg3857, to_epsg4326
 
 
+@dataclass
 class Metainfos:
-
     """Holds metadata for a single aerial image feature.
 
     Attributes:
@@ -27,7 +30,7 @@ class Metainfos:
         zoom_max (int): Maximum zoom level for the image.
         image_origin (str): Origin of the image.
         image_available (str): Image availability
-        image_spectral (str): Specral attribute of the image
+        image_spectral (str): Spectral attribute of the image
     """
 
     image_id: int

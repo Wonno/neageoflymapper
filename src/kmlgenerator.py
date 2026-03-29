@@ -1,3 +1,8 @@
+"""KML generation logic for nea-geofly-mapper.
+
+This module provides functionality to generate KML documents from aerial image
+metadata, including image center points and corner outlines.
+"""
 from fastkml import atom, geometry, kml
 from pygeoif import geometry as pygeo
 
@@ -18,8 +23,8 @@ def generator(metainfos):
     """
     k = kml.KML()
     doc = kml.Document(name=f"{metainfos.image_name}",
-                                atom_link=atom.Link(href='https://github.com/fabyr/neageoflymapper',
-                                           title='neageoflymapper')
+                                atom_link=atom.Link(href='https://github.com/wonno/neageoflymapper',
+                                           title='nea-geofly-mapper')
                                 )
     k.append(doc)
     corners = metainfos.corner_coords_wgs84g()
@@ -44,7 +49,6 @@ def generator(metainfos):
     pm = kml.Placemark(name=f"{metainfos.image_name}",
                        # TODO: how to properly wrap description CDATA?
                        description=desc,
-                       # description=f"<![CDATA[{desc}]]>",
                        id=f"{metainfos.image_name}",
                        kml_geometry=mg)
     doc.append(pm)

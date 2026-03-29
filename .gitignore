@@ -1,13 +1,23 @@
+# Byte-compiled / optimized / DLL files
 __pycache__/
-/*.jpg
-/*.txt
-/*.json
-*.zip
-*.spec
-*.iml
-dist/
-cache/
-build/
-*.idea/
+*.py[cod]
+*$py.class
+
+# Environments
 .venv/
 
+# PyInstaller
+build/
+dist/
+*.spec
+
+# Local config
+.tool-versions
+
+# Coverage
+/htmlcov/
+.coverage
+
+# IDE
+*.idea/
+*.iml

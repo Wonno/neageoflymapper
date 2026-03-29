@@ -1,18 +1,26 @@
+"""Core functions for downloading, assembling, and saving NEA Geofly aerial images.
+
+This module contains the main logic for retrieving metadata, downloading image tiles,
+assembling the tiles into a complete image, and saving metadata and KML files.
+"""
+
 from __future__ import annotations
 
 import os
 import re
 from collections.abc import Callable
 from math import ceil
+from typing import Any
 from urllib.parse import quote, urlencode
 
-from rich.console import Console
+from requests import RequestException
 from rich.progress import Progress
 from rich.table import Table
 
 import requests
 from PIL import Image
 
+from app_console import console
 from kmlgenerator import generator
 from metainfos import Metainfos
 
@@ -42,12 +50,15 @@ def construct_all_meta(metainfos: Metainfos, for_zoom_level: int):
     total_width = metainfos.image_width // divisor
     total_height = metainfos.image_height // divisor
 
-    TILE_WIDTH, TILE_HEIGHT = (256, 256)
+    tile_width, tile_height = (256, 256)
     result: list[tuple[int, int, str]] = []
-    for y in range(ceil(total_height / TILE_HEIGHT)):
-        for x in range(ceil(total_width / TILE_WIDTH)):
-            url = f"https://nea.geofly.eu/tiles/{quote(str(metainfos.image_tile_base_id))}/{quote(str(metainfos.image_path))}/{quote(str(for_zoom_level))}/{x}/{y}.jpg"
-            result.append((x * TILE_WIDTH, y * TILE_HEIGHT, url))
+    for y in range(ceil(total_height / tile_height)):
+        for x in range(ceil(total_width / tile_width)):
+            url = (f"https://nea.geofly.eu/tiles/"
+                   f"{quote(str(metainfos.image_tile_base_id))}/"
+                   f"{quote(str(metainfos.image_path))}/"
+                   f"{quote(str(for_zoom_level))}/{x}/{y}.jpg")
+            result.append((x * tile_width, y * tile_height, url))
 
     return (total_width, total_height), result
 
@@ -56,13 +67,12 @@ def download_all(meta: tuple[tuple[int, int], list]) -> Image.Image:
     image_size, tile_list = meta
     img = Image.new("RGBA", image_size, 0)
 
-    console = Console()
     with Progress() as p:
         t = p.add_task("Downloading...", total=100)
         while not p.finished:
             try:
                 for i, (x, y, url) in enumerate(tile_list):
-                    p.update(t, completed=(i+1)/len(tile_list)*100,
+                    p.update(t, completed=(i + 1) / len(tile_list) * 100,
                              description=f"Downloading Tile #{i + 1} of {len(tile_list)} [{url}]")
                     try:
                         with requests.get(
@@ -71,9 +81,7 @@ def download_all(meta: tuple[tuple[int, int], list]) -> Image.Image:
                             tile_response.raise_for_status()
                             with Image.open(tile_response.raw) as tile:
                                 img.paste(tile, box=(x, y))
-                    except KeyboardInterrupt:
-                        raise
-                    except Exception as e:
+                    except RequestException as e:
                         console.print(f"Downloading Tile #{i + 1} failed: {e}")
             except KeyboardInterrupt:
                 p.remove_task(t)
@@ -102,8 +110,6 @@ def main(
     zoom_level_callback: Callable[[int, int], int],
     prompt_interrupt: bool = True,
 ):
-
-    console = Console()
     console.print(f"Fetching info for {image_id}...")
     console.print()
 
@@ -113,27 +119,12 @@ def main(
         raise ValueError()
 
     feature = features["data"]["images"]["features"][0]
-    metainfos = Metainfos(image_id,feature)
-
-    table = Table(show_header=False)
-    table.add_column("Key")
-    table.add_column("Value")
-    table.add_row("Image name", f"{metainfos.image_name}")
-    table.add_row("Image location", f"{metainfos.image_location}")
-    table.add_row("Image date", f"{metainfos.image_date}")
-    table.add_row("Spectral channel", f"{metainfos.image_spectral}")
-    table.add_row("Available", "yes" if metainfos.image_available else "no")
-    table.add_row("Origin", f"{metainfos.image_origin}")
+    metainfos = Metainfos(image_id, feature)
 
     zoom = zoom_level_callback(metainfos.zoom_min, metainfos.zoom_max)
     (image_width, image_height), tile_list = construct_all_meta(metainfos, zoom)
 
-    if metainfos.image_available:
-        table.add_row("Zoom", f"{zoom} ({metainfos.zoom_min}-{metainfos.zoom_max})")
-        table.add_row("Image dimension", f"{image_width}x{image_height}")
-        table.add_row("Tilecount", f"{len(tile_list)}")
-
-    console.print(table)
+    console.print(info_summary(image_height, image_width, metainfos, tile_list, zoom))
 
     if not metainfos.image_available:
         return
@@ -156,11 +147,28 @@ def main(
     with open(f"{path}.txt", "w", encoding="utf-8") as fp:
         fp.write(metainfos.info_text())
         fp.write("\n")
-        fp.write( f"zoom_level={zoom}\n")
+        fp.write(f"zoom_level={zoom}\n")
 
-    kml =generator(metainfos)
-    with open(  f"{path}.kml", "w", encoding="utf-8") as f:
+    kml = generator(metainfos)
+    with open(f"{path}.kml", "w", encoding="utf-8") as f:
         f.write(kml.to_string(prettyprint=True))
 
     console.print(f"\n:floppy_disk:  Saved to [i]{image_path}[/i]")
-    console.print("Done")
+
+
+def info_summary(image_height: int | Any, image_width: int | Any, metainfos: Metainfos,
+                 tile_list: list[tuple[int, int, str]], zoom: int):
+    table = Table(show_header=False)
+    table.add_column("Key")
+    table.add_column("Value")
+    table.add_row("Image name", f"{metainfos.image_name}")
+    table.add_row("Image location", f"{metainfos.image_location}")
+    table.add_row("Image date", f"{metainfos.image_date}")
+    table.add_row("Spectral channel", f"{metainfos.image_spectral}")
+    table.add_row("Available", "yes" if metainfos.image_available else "no")
+    table.add_row("Origin", f"{metainfos.image_origin}")
+    if metainfos.image_available:
+        table.add_row("Zoom", f"{zoom} ({metainfos.zoom_min}-{metainfos.zoom_max})")
+        table.add_row("Image dimension", f"{image_width}x{image_height}")
+        table.add_row("Tilecount", f"{len(tile_list)}")
+    return table
