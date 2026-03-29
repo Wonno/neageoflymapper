@@ -33,6 +33,9 @@ jobs:
         virtualenvs-create: true
         virtualenvs-in-project: true
 
+    - name: Check lock file
+      run: poetry lock --check
+
     - name: Add Poetry to PATH (Windows)
       if: matrix.os == 'windows-latest'
       run: |
