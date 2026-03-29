@@ -61,8 +61,8 @@ jobs:
       run: |
         poetry version ${{ github.event.inputs.version_bump }}
         NEW_VERSION=$(poetry version -s)
-        echo "new_version=v$NEW_VERSION" >> $GITHUB_OUTPUT
-        echo "tag_name=v$NEW_VERSION" >> $GITHUB_OUTPUT
+        echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+        echo "tag_name=$NEW_VERSION" >> $GITHUB_OUTPUT
 
     - name: Configure Git
       run: |
@@ -72,8 +72,9 @@ jobs:
     - name: Commit and Push Version Bump
       run: |
         git add pyproject.toml
-        git commit -m "chore: bump version to ${{ steps.bump.outputs.new_version }}"
-        git push
+        git commit -m "bump version to ${{ steps.bump.outputs.new_version }}"
+        git tag "${{ steps.bump.outputs.new_version }}"
+        git push --atomic origin main "${{ steps.bump.outputs.new_version }}"
 
   build-and-release:
     needs: prepare
