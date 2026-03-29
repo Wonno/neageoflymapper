@@ -122,9 +122,9 @@ jobs:
       shell: bash
       run: |
         if [ "${{ runner.os }}" == "Windows" ]; then
-          mv dist/neageoflymapper.exe dist/${{ matrix.asset_name }}
+          mv dist/nea-geofly-mapper.exe dist/${{ matrix.asset_name }}
         else
-          mv dist/neageoflymapper dist/${{ matrix.asset_name }}
+          mv dist/nea-geofly-mapper dist/${{ matrix.asset_name }}
         fi
 
     - name: Create or Update Release
