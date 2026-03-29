@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "nea-geofly-mapper"
-version = "0.1.4"
+version = "0.1.5"
 description = "Download and stitch map tiles to a single photo from https://nea.geofly.eu/"
 authors = ["fabyr", "Wonno"]
 license = "MIT"
