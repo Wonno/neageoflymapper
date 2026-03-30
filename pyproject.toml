@@ -1,21 +1,25 @@
 [tool.poetry]
+package-mode = false
+requires-poetry = '>=2.0,<3.0'
+
+[project]
 name = "nea-geofly-mapper"
 version = "0.1.6"
 description = "Download and stitch map tiles to a single photo from https://nea.geofly.eu/"
-authors = ["fabyr", "Wonno"]
+authors = [{ name = "fabyr" }, { name = "Wonno" }]
 license = "MIT"
 readme = "README.md"
-package-mode = false
 
-[tool.poetry.dependencies]
-python = ">=3.11,<3.15"
-fastkml = "^1.4.0"
-lxml = "^6.0.2"
-requests = "^2.33.0"
-rich = "^14.3.3"
-pillow = "^12.1.1"
-pyproj = "^3.7.2"
-pygeoif = "^1.6.0"
+dependencies = [
+    "python (>=3.11,<3.15)",
+    "fastkml (>=1.4.0)",
+    "lxml (>=6.0.2)",
+    "requests (>=2.33.0)",
+    "rich (>=14.3.3)",
+    "pillow (>=12.1.1)",
+    "pyproj (>=3.7.2)",
+    "pygeoif (>=1.6.0)",
+]
 
 [tool.poetry.group.test.dependencies]
 pytest = "^9.0.2"
@@ -26,6 +30,9 @@ pytest-github-report = "^0.0.1"
 [tool.poetry.group.optional.dependencies]
 pyinstaller = "^6.19.0"
 
+[tool.poetry.group.dev.dependencies.black]
+allow-prereleases = false
+
 [tool.pytest.ini_options]
 minversion = "7.0"
 addopts = "-cov=src"
@@ -33,7 +40,7 @@ testpaths = [
     "tests",
 ]
 pythonpath = [
-  "src"
+    "src"
 ]
 
 [tool.pylint.main]
