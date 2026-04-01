@@ -67,6 +67,7 @@ def download_all(meta: tuple[tuple[int, int], list]) -> Image.Image:
     image_size, tile_list = meta
     img = Image.new("RGBA", image_size, 0)
 
+    session = requests.Session()
     with Progress() as p:
         t = p.add_task("Downloading...", total=100)
         while not p.finished:
@@ -75,7 +76,7 @@ def download_all(meta: tuple[tuple[int, int], list]) -> Image.Image:
                     p.update(t, completed=(i + 1) / len(tile_list) * 100,
                              description=f"Downloading Tile #{i + 1} of {len(tile_list)} [{url}]")
                     try:
-                        with requests.get(
+                        with session.get(
                             url, stream=True, timeout=REQUEST_TIMEOUT
                         ) as tile_response:
                             tile_response.raise_for_status()
