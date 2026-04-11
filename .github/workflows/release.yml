@@ -18,6 +18,9 @@ on:
         default: true
         type: boolean
 
+permissions:
+  contents: write        
+
 env:
   PYTHON_VERSION: '3.12'
 
