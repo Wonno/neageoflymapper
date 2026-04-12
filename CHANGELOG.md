@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- New CLI parameter `--output-dir` to specify the destination directory for downloaded files.
+
 ### Changed
 
 - Poetry update

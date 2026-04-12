@@ -40,9 +40,9 @@ In order to find the ID of an Image, use the Devtools of a browser as follows (C
 
 You can call application directly with some arguments to skip interactive prompting:
 
-```
-$ python main.py -h
-usage: main.py [-h] [-i ID [ID ...]] [-z ZOOM] [--version]
+```text
+$ poetry run python src/main.py -h
+usage: main.py [-h] [-i ID [ID ...]] [-z ZOOM] [-o OUTPUT_DIR] [--version]
 
 Downloads an Image by ID from https://nea.geofly.eu.
 If not arguments are set, values will be prompted for interactively.
@@ -52,6 +52,8 @@ options:
   -i ID [ID ...], --id ID [ID ...]
                         Image ID(s).
   -z ZOOM, --zoom ZOOM  Zoom level. You can specify 'max' or 'min' to use the highest/lowest zoom level for any image.
+  -o OUTPUT_DIR, --output-dir OUTPUT_DIR
+                        Destination directory for downloaded files.
   --version             Show the application version and exit.
 
 Version: 0.0.0

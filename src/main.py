@@ -111,6 +111,7 @@ def main(argv=None):
                     image_id,
                     fixed_zoom_level(args.zoom) if args.zoom else prompt_zoom_level,
                     prompt_interrupt=not (args.id and args.zoom),
+                    output_directory=args.output_dir,
                 )
             except ValueError as e:
                 console.print(str(e))
@@ -123,6 +124,14 @@ def main(argv=None):
 
 
 def cli_args(argv) -> Namespace:
+    """Parse CLI arguments.
+
+    Args:
+        argv: Optional argument list passed to ``argparse``.
+
+    Returns:
+        Parsed command-line arguments.
+    """
     app_version = get_version()
 
     parser = ap.ArgumentParser(
@@ -142,6 +151,13 @@ def cli_args(argv) -> Namespace:
         type=str,
         required=False,
         help="Zoom level. You can specify 'max' or 'min' to use the highest/lowest zoom level for any image.",
+    )
+    parser.add_argument(
+        "-o",
+        "--output-dir",
+        type=str,
+        default=".",
+        help="Destination directory for downloaded files.",
     )
     parser.add_argument(
         "--version",
