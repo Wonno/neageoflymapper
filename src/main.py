@@ -90,6 +90,29 @@ def fixed_zoom_level(zoom_level: str):
     return zoom_level_callback
 
 
+def parse_image_id(image_id_value: int | str) -> int:
+    """Parse and validate an image ID.
+
+    Args:
+        image_id_value: Raw image ID value from the CLI or interactive prompt.
+
+    Returns:
+        The validated image ID.
+
+    Raises:
+        ValueError: If the ID is not a positive integer.
+    """
+    try:
+        image_id = int(image_id_value)
+    except ValueError as ve:
+        raise ValueError("Image ID must be a positive integer.") from ve
+
+    if image_id <= 0:
+        raise ValueError("Image ID must be a positive integer.")
+
+    return image_id
+
+
 def main(argv=None):
     """Run the command-line interface.
 
@@ -105,8 +128,11 @@ def main(argv=None):
         while True:
             try:
                 image_id = input("Enter ID: ") if args.id is None else args.id[index]
+                if args.id is None and image_id == "":
+                    console.print("No image ID entered. Exiting.")
+                    break
                 index += 1
-                image_id = int(image_id)
+                image_id = parse_image_id(image_id)
                 core.main(
                     image_id,
                     fixed_zoom_level(args.zoom) if args.zoom else prompt_zoom_level,
@@ -115,7 +141,8 @@ def main(argv=None):
                 )
             except ValueError as e:
                 console.print(str(e))
-                console.print("Try again.", style="bold red")
+                if args.id is None:
+                    console.print("Try again.", style="bold red")
 
             if args.id and index >= len(args.id):
                 break

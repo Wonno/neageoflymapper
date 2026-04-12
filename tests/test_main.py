@@ -1,0 +1,54 @@
+"""Tests for main module."""
+
+from unittest.mock import patch
+
+import pytest
+
+from main import cli_args, main, parse_image_id
+
+
+def test_cli_args_output_dir_default():
+    """Test that the output directory defaults to the current directory."""
+    args = cli_args([])
+
+    assert args.output_dir == "."
+
+
+def test_cli_args_output_dir_override():
+    """Test parsing the output directory override argument."""
+    args = cli_args(["--output-dir", "downloads", "--id", "123", "--zoom", "max"])
+
+    assert args.output_dir == "downloads"
+
+
+def test_parse_image_id_rejects_non_positive_integer():
+    """Test that image IDs must be positive integers."""
+    with pytest.raises(ValueError, match="Image ID must be a positive integer."):
+        parse_image_id(0)
+
+    with pytest.raises(ValueError, match="Image ID must be a positive integer."):
+        parse_image_id(-1)
+
+@patch("main.console.print")
+@patch("main.core.main")
+@patch("builtins.input", side_effect=["0", ""])
+def test_main_rejects_non_positive_interactive_id(mock_input, mock_core_main, mock_console_print):
+    """Test that a non-positive interactive ID shows a specific error message."""
+    main([])
+
+    assert mock_input.call_count == 2
+    mock_core_main.assert_not_called()
+    mock_console_print.assert_any_call("Image ID must be a positive integer.")
+    mock_console_print.assert_any_call("Try again.", style="bold red")
+
+
+@patch("main.console.print")
+@patch("main.core.main")
+def test_main_rejects_non_positive_cli_id(mock_core_main, mock_console_print):
+    """Test that a non-positive CLI ID shows a specific error without retry text."""
+    main(["--id", "0", "--zoom", "max"])
+
+    mock_core_main.assert_not_called()
+    mock_console_print.assert_any_call("Image ID must be a positive integer.")
+    printed_messages = [call.args[0] for call in mock_console_print.call_args_list if call.args]
+    assert "Try again." not in printed_messages
