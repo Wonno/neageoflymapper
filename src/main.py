@@ -139,6 +139,7 @@ def main(argv=None):
                     prompt_interrupt=not (args.id and args.zoom),
                     output_directory=args.output_dir,
                     filename_pattern=args.filename_pattern,
+                    no_download=args.no_download,
                 )
             except ValueError as e:
                 console.print(str(e))
@@ -196,6 +197,11 @@ def cli_args(argv) -> Namespace:
             "Custom file-name pattern using str.format placeholders like "
             "{name}, {date}, {location}, {id}, {width}, {height}, {origin}, {spectral} and {zoom}."
         ),
+    )
+    parser.add_argument(
+        "--no-download",
+        action="store_true",
+        help="Skip downloading and saving the stitched image file.",
     )
     parser.add_argument(
         "--version",

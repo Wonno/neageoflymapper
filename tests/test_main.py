@@ -36,6 +36,13 @@ def test_cli_args_filename_pattern_override():
     assert args.filename_pattern == "{id}_{zoom}"
 
 
+def test_cli_args_no_download_flag():
+    """Test parsing the no-download flag."""
+    args = cli_args(["--no-download"])
+
+    assert args.no_download is True
+
+
 def test_parse_image_id_rejects_non_positive_integer():
     """Test that image IDs must be positive integers."""
     with pytest.raises(ValueError, match="Image ID must be a positive integer."):
@@ -67,3 +74,12 @@ def test_main_rejects_non_positive_cli_id(mock_core_main, mock_console_print):
     mock_console_print.assert_any_call("Image ID must be a positive integer.")
     printed_messages = [call.args[0] for call in mock_console_print.call_args_list if call.args]
     assert "Try again." not in printed_messages
+
+
+@patch("main.core.main")
+def test_main_passes_no_download_to_core(mock_core_main):
+    """Test that the CLI passes the no-download flag into the core flow."""
+    main(["--id", "123", "--zoom", "max", "--no-download"])
+
+    _, kwargs = mock_core_main.call_args
+    assert kwargs["no_download"] is True
