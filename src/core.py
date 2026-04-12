@@ -91,17 +91,28 @@ def download_all(meta: tuple[tuple[int, int], list]) -> Image.Image:
 
 
 def clean_filename(filename: str):
+    """Replace characters that are invalid in filesystem names."""
     return re.sub(r"[\x00-\x1f<>:\"/\\|?*]", "-", filename)
 
 
-def determine_outputname(m: Metainfos, zoom: int) -> str:
+def determine_outputname(m: Metainfos, zoom: int, output_directory: str = ".") -> str:
+    """Build a unique output path without file extension.
+
+    Args:
+        m: Metadata for the selected image.
+        zoom: Effective zoom level.
+        output_directory: Directory where output files should be stored.
+
+    Returns:
+        Output path without a file extension.
+    """
     output_name = f"{m.image_name}_{m.image_date}_{m.image_location}_{m.image_id}_{zoom}"
     output_name = clean_filename(output_name)
 
-    path = output_name
+    path = os.path.join(output_directory, output_name)
     i = 2
     while os.path.exists(path + ".jpg"):
-        path = f"{output_name} ({i})"
+        path = os.path.join(output_directory, f"{output_name} ({i})")
         i += 1
     return path
 
@@ -110,6 +121,7 @@ def main(
     image_id: int,
     zoom_level_callback: Callable[[int, int], int],
     prompt_interrupt: bool = True,
+    output_directory: str = ".",
 ):
     console.print(f"Fetching info for {image_id}...")
     console.print()
@@ -139,7 +151,8 @@ def main(
             return
         console.print()
 
-    path = determine_outputname(metainfos, zoom)
+    os.makedirs(output_directory, exist_ok=True)
+    path = determine_outputname(metainfos, zoom, output_directory)
     image_path = f"{path}.jpg"
 
     img = download_all(((image_width, image_height), tile_list))
