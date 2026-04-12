@@ -56,7 +56,7 @@ jobs:
     - name: Install dependencies
       if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
       run: |
-        poetry install --no-interaction --no-root --with=build
+        poetry install --no-interaction --no-root --all-groups
 
     - name: Run Linting
       if: matrix.os == 'ubuntu-latest'
