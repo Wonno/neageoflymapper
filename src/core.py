@@ -183,7 +183,7 @@ def determine_outputname(
 
     path = os.path.join(output_directory, output_name)
     i = 2
-    while os.path.exists(path + ".jpg"):
+    while any(os.path.exists(path + extension) for extension in (".jpg", ".txt", ".kml")):
         path = os.path.join(output_directory, f"{output_name} ({i})")
         i += 1
     return path
@@ -195,6 +195,9 @@ def main(
     prompt_interrupt: bool = True,
     output_directory: str = ".",
     filename_pattern: str = DEFAULT_FILENAME_PATTERN,
+    no_download: bool = False,
+    no_kml: bool = False,
+    no_txt: bool = False,
 ):
     """Download one image and write the image, metadata, and KML files.
 
@@ -204,6 +207,9 @@ def main(
         prompt_interrupt: Whether to pause for confirmation before download.
         output_directory: Destination directory for generated files.
         filename_pattern: ``str.format`` pattern for the output base name.
+        no_download: Whether to skip downloading and saving the stitched image.
+        no_kml: Whether to skip generating and saving the KML file.
+        no_txt: Whether to skip generating and saving the metadata text file.
     """
     console.print(f"Fetching info for {image_id}...")
     console.print()
@@ -224,7 +230,7 @@ def main(
     if not metainfos.image_available:
         return
 
-    if prompt_interrupt:
+    if prompt_interrupt and not no_download:
         try:
             input("Press Enter to download or Ctrl+C to exit now or anytime during download.")
         except KeyboardInterrupt:
@@ -236,18 +242,27 @@ def main(
     os.makedirs(output_directory, exist_ok=True)
     path = determine_outputname(metainfos, zoom, output_directory, filename_pattern)
     image_path = f"{path}.jpg"
+    text_path = f"{path}.txt"
+    kml_path = f"{path}.kml"
 
-    img = download_all(((image_width, image_height), tile_list))
-    img.convert("RGB").save(image_path, quality=95)
+    if not no_download:
+        img = download_all(((image_width, image_height), tile_list))
+        img.convert("RGB").save(image_path, quality=95)
 
-    with open(f"{path}.txt", "w", encoding="utf-8") as fp:
-        fp.write(metainfos.info_text())
-        fp.write("\n")
-        fp.write(f"zoom_level={zoom}\n")
+    if not no_txt:
+        with open(text_path, "w", encoding="utf-8") as fp:
+            fp.write(metainfos.info_text())
+            fp.write("\n")
+            fp.write(f"zoom_level={zoom}\n")
 
-    kml = generator(metainfos)
-    with open(f"{path}.kml", "w", encoding="utf-8") as f:
-        f.write(kml.to_string(prettyprint=True))
+    if not no_kml:
+        kml = generator(metainfos)
+        with open(kml_path, "w", encoding="utf-8") as f:
+            f.write(kml.to_string(prettyprint=True))
+
+    if not no_download:
+        console.print(f"\n:floppy_disk:  Saved to [i]{image_path}[/i]")
+        return
 
     console.print(f"\n:floppy_disk:  Saved to [i]{image_path}[/i]")
 

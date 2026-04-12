@@ -1,11 +1,12 @@
-"""Tests for core file-name handling."""
+"""Tests for core file-name handling and output options."""
 
 from pathlib import Path
 from types import SimpleNamespace
+from unittest.mock import MagicMock, patch
 
 import pytest
 
-from core import determine_outputname, render_filename_pattern
+from core import determine_outputname, main, render_filename_pattern
 
 
 def create_metainfos():
@@ -52,6 +53,36 @@ def test_determine_outputname_deduplicates_within_output_directory(tmp_path):
     """Test that de-duplication stays scoped to the selected directory."""
     existing = tmp_path / "2026-04-12_123_5.jpg"
     existing.write_bytes(b"existing")
+
+    path = determine_outputname(
+        create_metainfos(),
+        5,
+        str(tmp_path),
+        "{date}_{id}_{zoom}",
+    )
+
+    assert Path(path) == tmp_path / "2026-04-12_123_5 (2)"
+
+
+def test_determine_outputname_deduplicates_with_existing_kml(tmp_path):
+    """Test that de-duplication also considers existing KML files."""
+    existing = tmp_path / "2026-04-12_123_5.kml"
+    existing.write_text("<kml />", encoding="utf-8")
+
+    path = determine_outputname(
+        create_metainfos(),
+        5,
+        str(tmp_path),
+        "{date}_{id}_{zoom}",
+    )
+
+    assert Path(path) == tmp_path / "2026-04-12_123_5 (2)"
+
+
+def test_determine_outputname_deduplicates_with_existing_txt(tmp_path):
+    """Test that de-duplication also considers existing text metadata files."""
+    existing = tmp_path / "2026-04-12_123_5.txt"
+    existing.write_text("metadata", encoding="utf-8")
 
     path = determine_outputname(
         create_metainfos(),

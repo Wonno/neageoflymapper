@@ -43,7 +43,8 @@ You can call application directly with some arguments to skip interactive prompt
 ```text
 $ poetry run python src/main.py -h
 usage: main.py [-h] [-i ID [ID ...]] [-z ZOOM] [-o OUTPUT_DIR]
-               [-n FILENAME_PATTERN] [--version]
+               [-n FILENAME_PATTERN] [--no-download] [--no-kml] [--no-txt]
+               [--version]
 
 Downloads an Image by ID from https://nea.geofly.eu.
 If not arguments are set, values will be prompted for interactively.
@@ -59,6 +60,9 @@ options:
                         Custom file-name pattern using str.format placeholders like
                         {name}, {date}, {location}, {id},
                         and {zoom}.
+  --no-download         Skip downloading and saving the stitched image file.
+  --no-kml              Skip generating and saving the KML file.
+  --no-txt              Skip generating and saving the metadata text file.
   --version             Show the application version and exit.
 
 Version: 0.0.0
@@ -68,6 +72,25 @@ Use `--output-dir` to store the generated `.jpg`, `.txt`, and `.kml` files in a 
 
 ```bash
 poetry run python src/main.py --id 123456 --zoom max --output-dir downloads
+```
+
+Use `--no-download` to fetch image metadata and create the `.txt` and `.kml`
+files without downloading or storing the stitched image:
+
+```bash
+poetry run python src/main.py --id 123456 --zoom max --no-download
+```
+
+Use `--no-kml` to skip writing the `.kml` file while still saving the other outputs:
+
+```bash
+poetry run python src/main.py --id 123456 --zoom max --no-kml
+```
+
+Use `--no-txt` to skip writing the metadata `.txt` file while still saving the other outputs:
+
+```bash
+poetry run python src/main.py --id 123456 --zoom max --no-txt
 ```
 
 Use `--filename-pattern` to customize the shared base name of the generated files.
