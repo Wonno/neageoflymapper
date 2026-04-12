@@ -1,30 +1,43 @@
-[tool.poetry]
+[project]
 name = "nea-geofly-mapper"
 version = "0.1.7"
 description = "Download and stitch map tiles to a single photo from https://nea.geofly.eu/"
-authors = ["fabyr", "Wonno"]
+authors = [
+    { name = "fabyr" },
+    { name = "Wonno" },
+]
 license = "MIT"
 readme = "README.md"
+requires-python = ">=3.11,<3.15"
+
+dependencies = [
+    "fastkml>=1.4.0,<2.0.0",
+    "lxml>=6.0.2,<7.0.0",
+    "requests>=2.33.0,<3.0.0",
+    "rich>=14.3.3,<15.0.0",
+    "pillow>=12.1.1,<13.0.0",
+    "pyproj>=3.7.2,<4.0.0",
+    "pygeoif>=1.6.0,<2.0.0",
+]
+
+[tool.poetry]
 package-mode = false
+requires-poetry = ">=2.0,<3.0"
 
-[tool.poetry.dependencies]
-python = ">=3.11,<3.15"
-fastkml = "^1.4.0"
-lxml = "^6.0.2"
-requests = "^2.33.0"
-rich = "^14.3.3"
-pillow = "^12.1.1"
-pyproj = "^3.7.2"
-pygeoif = "^1.6.0"
+[dependency-groups]
+test = [
+    "pytest (>=9.0.2,<10.0.0)",
+    "pytest-cov (>=7.1.0,<8.0.0)",
+    "pylint (>=4.0.5,<5.0.0)",
+    "pytest-github-report (>=0.0.1,<0.0.2)",
+]
 
-[tool.poetry.group.test.dependencies]
-pytest = "^9.0.2"
-pytest-cov = "^7.1.0"
-pylint = "^4.0.5"
-pytest-github-report = "^0.0.1"
+build = [
+    "pyinstaller (>=6.19.0,<7.0.0)",
+]
 
-[tool.poetry.group.optional.dependencies]
-pyinstaller = "^6.19.0"
+[tool.poetry.group.build]
+optional = true
 
 [tool.pytest.ini_options]
 minversion = "7.0"
@@ -38,7 +51,6 @@ pythonpath = [
 
 [tool.pylint.main]
 ignore = [".git", "__pycache__", "dist", "build", ".venv"]
-
 
 [tool.pylint.reports]
 output-format = "colorized"
@@ -54,13 +66,6 @@ ignored-modules = [
     "importlib.metadata"
 ]
 
-
 [build-system]
-requires = ["poetry-core"]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
-
-[dependency-groups]
-dev = [
-    "pytest (>=9.0.2,<10.0.0)",
-    "pylint (>=4.0.5,<5.0.0)"
-]
