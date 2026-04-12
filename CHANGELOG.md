@@ -15,6 +15,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - New CLI parameter `--no-kml` to skip storage of KML files
 - New CLI parameter `--no-txt` to skip storage of TXT files
 
+### Fixed
+- application version is now correctly displayed in the help message.
+
 ### Changed
 
 - Poetry update

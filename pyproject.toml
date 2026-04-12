@@ -23,6 +23,9 @@ dependencies = [
 [tool.poetry]
 package-mode = false
 requires-poetry = ">=2.0,<3.0"
+packages = [
+    { include = "*.py", from = "src" },
+]
 
 [dependency-groups]
 test = [
@@ -66,6 +69,17 @@ ignored-modules = [
     "importlib.metadata"
 ]
 
+[tool.poetry-pyinstaller-plugin]
+console = true
+
+[tool.poetry-pyinstaller-plugin.targets.nea-geofly-mapper]
+source = "src/main.py"
+type = "onefile"
+include = { "pyproject.toml" = "." }
+
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.requires-plugins]
+poetry-pyinstaller-plugin = { version = ">=2.0.0,<3.0.0", extras = ["plugin"] }

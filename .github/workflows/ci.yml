@@ -57,7 +57,7 @@ jobs:
     - name: Install dependencies
       if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
       run: |
-        poetry install --no-interaction --no-root --with build
+        poetry install --no-interaction --no-root
 
     - name: Run Linting
       if: matrix.os == 'ubuntu-latest'
@@ -68,14 +68,14 @@ jobs:
       run: poetry run pytest
 
     - name: Build Binary
-      run: poetry run pyinstaller --onefile src/main.py --name nea-geofly-mapper
+      run: poetry pyinstaller build
 
     - name: Attach Binary
       uses: actions/upload-artifact@v7
       with:
         name: nea-geofly-mapper-${{ matrix.os }}
         path: |
-          dist/nea-geofly-mapper
-          dist/nea-geofly-mapper.exe
+          dist/pyinstaller/**/nea-geofly-mapper
+          dist/pyinstaller/**/nea-geofly-mapper.exe
         if-no-files-found: error
         retention-days: 7

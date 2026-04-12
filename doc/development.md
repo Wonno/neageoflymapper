@@ -116,8 +116,7 @@ poetry run pylint src/main.py src tests
 To create a standalone executable:
 
 ```bash
-poetry install --with build
-poetry run pyinstaller --onefile src/main.py --name nea-geofly-mapper
+poetry pyinstaller build
 ```
 
-The resulting binary will be located in the `dist/` directory.
+The plugin-built executable will be located in `dist/pyinstaller/<platform>/`.

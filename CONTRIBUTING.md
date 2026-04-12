@@ -46,4 +46,4 @@ We use **Semantic Versioning (SemVer)**. The version is managed in `pyproject.to
 - **Run Application**: `poetry run python src/main.py --help`
 - **Run Tests**: `poetry run pytest`
 - **Run Linter**: `poetry run pylint src/main.py src tests`
-- **Build Binary**: `poetry install --with build && poetry run pyinstaller --onefile src/main.py --name nea-geofly-mapper`
+- **Build Binary**: `poetry pyinstaller build`

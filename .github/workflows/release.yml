@@ -59,7 +59,7 @@ jobs:
 
     - name: Install dependencies
       run: |
-        poetry install --no-interaction --no-root --with build
+        poetry install --no-interaction --no-root
 
     - name: Run Tests
       run: poetry run pytest
@@ -123,19 +123,16 @@ jobs:
         echo "C:\Users\runneradmin\.local\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
     - name: Install dependencies
-      run: poetry install --no-interaction --no-root --with build
+      run: poetry install --no-interaction --no-root
 
     - name: Build Binary
-      run: poetry run pyinstaller --onefile src/main.py --name nea-geofly-mapper
+      run: poetry pyinstaller build
 
     - name: Rename binary
       shell: bash
       run: |
-        if [ "${{ runner.os }}" == "Windows" ]; then
-          mv dist/nea-geofly-mapper.exe dist/${{ matrix.asset_name }}
-        else
-          mv dist/nea-geofly-mapper dist/${{ matrix.asset_name }}
-        fi
+        BINARY_PATH="$(find dist/pyinstaller -maxdepth 2 -type f \( -name 'nea-geofly-mapper' -o -name 'nea-geofly-mapper.exe' \) | head -n 1)"
+        mv "$BINARY_PATH" "dist/${{ matrix.asset_name }}"
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4
