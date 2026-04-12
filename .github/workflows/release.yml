@@ -123,7 +123,7 @@ jobs:
         echo "C:\Users\runneradmin\.local\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
     - name: Install dependencies
-      run: poetry install --no-interaction --no-root
+      run: poetry install --no-interaction --no-root --with=build
 
     - name: Build Binary
       run: poetry pyinstaller build
