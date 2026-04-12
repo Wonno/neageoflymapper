@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Poetry update
+- Exit program if no Image ID is entered in interactive mode.
+- Improved error message for invalid Image IDs.
 
 ## [0.1.7] - 2026-04-01
 
