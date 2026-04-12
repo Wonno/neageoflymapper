@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - New CLI parameter `--filename-template` to customize the naming convention of downloaded files using placeholders.  
 - New CLI parameter `--no-download` to skip the download and composing of images tiles
 - New CLI parameter `--no-kml` to skip storage of KML files
+- New CLI parameter `--no-txt` to skip storage of TXT files
 
 ### Changed
 

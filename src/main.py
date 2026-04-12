@@ -141,6 +141,7 @@ def main(argv=None):
                     filename_pattern=args.filename_pattern,
                     no_download=args.no_download,
                     no_kml=args.no_kml,
+                    no_txt=args.no_txt,
                 )
             except ValueError as e:
                 console.print(str(e))
@@ -208,6 +209,11 @@ def cli_args(argv) -> Namespace:
         "--no-kml",
         action="store_true",
         help="Skip generating and saving the KML file.",
+    )
+    parser.add_argument(
+        "--no-txt",
+        action="store_true",
+        help="Skip generating and saving the metadata text file.",
     )
     parser.add_argument(
         "--version",

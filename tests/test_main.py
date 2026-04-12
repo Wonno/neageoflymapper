@@ -50,6 +50,13 @@ def test_cli_args_no_kml_flag():
     assert args.no_kml is True
 
 
+def test_cli_args_no_txt_flag():
+    """Test parsing the no-txt flag."""
+    args = cli_args(["--no-txt"])
+
+    assert args.no_txt is True
+
+
 def test_parse_image_id_rejects_non_positive_integer():
     """Test that image IDs must be positive integers."""
     with pytest.raises(ValueError, match="Image ID must be a positive integer."):
@@ -99,3 +106,12 @@ def test_main_passes_no_kml_to_core(mock_core_main):
 
     _, kwargs = mock_core_main.call_args
     assert kwargs["no_kml"] is True
+
+
+@patch("main.core.main")
+def test_main_passes_no_txt_to_core(mock_core_main):
+    """Test that the CLI passes the no-txt flag into the core flow."""
+    main(["--id", "123", "--zoom", "max", "--no-txt"])
+
+    _, kwargs = mock_core_main.call_args
+    assert kwargs["no_txt"] is True

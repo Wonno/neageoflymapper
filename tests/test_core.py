@@ -77,3 +77,18 @@ def test_determine_outputname_deduplicates_with_existing_kml(tmp_path):
     )
 
     assert Path(path) == tmp_path / "2026-04-12_123_5 (2)"
+
+
+def test_determine_outputname_deduplicates_with_existing_txt(tmp_path):
+    """Test that de-duplication also considers existing text metadata files."""
+    existing = tmp_path / "2026-04-12_123_5.txt"
+    existing.write_text("metadata", encoding="utf-8")
+
+    path = determine_outputname(
+        create_metainfos(),
+        5,
+        str(tmp_path),
+        "{date}_{id}_{zoom}",
+    )
+
+    assert Path(path) == tmp_path / "2026-04-12_123_5 (2)"

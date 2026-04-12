@@ -197,6 +197,7 @@ def main(
     filename_pattern: str = DEFAULT_FILENAME_PATTERN,
     no_download: bool = False,
     no_kml: bool = False,
+    no_txt: bool = False,
 ):
     """Download one image and write the image, metadata, and KML files.
 
@@ -208,6 +209,7 @@ def main(
         filename_pattern: ``str.format`` pattern for the output base name.
         no_download: Whether to skip downloading and saving the stitched image.
         no_kml: Whether to skip generating and saving the KML file.
+        no_txt: Whether to skip generating and saving the metadata text file.
     """
     console.print(f"Fetching info for {image_id}...")
     console.print()
@@ -247,28 +249,19 @@ def main(
         img = download_all(((image_width, image_height), tile_list))
         img.convert("RGB").save(image_path, quality=95)
 
-    with open(text_path, "w", encoding="utf-8") as fp:
-        fp.write(metainfos.info_text())
-        fp.write("\n")
-        fp.write(f"zoom_level={zoom}\n")
+    if not no_txt:
+        with open(text_path, "w", encoding="utf-8") as fp:
+            fp.write(metainfos.info_text())
+            fp.write("\n")
+            fp.write(f"zoom_level={zoom}\n")
 
     if not no_kml:
         kml = generator(metainfos)
         with open(kml_path, "w", encoding="utf-8") as f:
             f.write(kml.to_string(prettyprint=True))
 
-    if no_download and no_kml:
-        console.print(f"\n:floppy_disk:  Saved metadata to [i]{text_path}[/i] (image and KML skipped)")
-        return
-
-    if no_download:
-        console.print(
-            f"\n:floppy_disk:  Saved metadata to [i]{text_path}[/i] and [i]{kml_path}[/i] (image download skipped)"
-        )
-        return
-
-    if no_kml:
-        console.print(f"\n:floppy_disk:  Saved to [i]{image_path}[/i] and [i]{text_path}[/i] (KML skipped)")
+    if not no_download:
+        console.print(f"\n:floppy_disk:  Saved to [i]{image_path}[/i]")
         return
 
     console.print(f"\n:floppy_disk:  Saved to [i]{image_path}[/i]")
