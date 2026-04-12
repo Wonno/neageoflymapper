@@ -42,7 +42,8 @@ You can call application directly with some arguments to skip interactive prompt
 
 ```text
 $ poetry run python src/main.py -h
-usage: main.py [-h] [-i ID [ID ...]] [-z ZOOM] [-o OUTPUT_DIR] [--version]
+usage: main.py [-h] [-i ID [ID ...]] [-z ZOOM] [-o OUTPUT_DIR]
+               [-n FILENAME_PATTERN] [--version]
 
 Downloads an Image by ID from https://nea.geofly.eu.
 If not arguments are set, values will be prompted for interactively.
@@ -54,7 +55,38 @@ options:
   -z ZOOM, --zoom ZOOM  Zoom level. You can specify 'max' or 'min' to use the highest/lowest zoom level for any image.
   -o OUTPUT_DIR, --output-dir OUTPUT_DIR
                         Destination directory for downloaded files.
+  -n FILENAME_PATTERN, --filename-pattern FILENAME_PATTERN
+                        Custom file-name pattern using str.format placeholders like
+                        {name}, {date}, {location}, {id},
+                        and {zoom}.
   --version             Show the application version and exit.
 
 Version: 0.0.0
+```
+
+Use `--output-dir` to store the generated `.jpg`, `.txt`, and `.kml` files in a specific directory:
+
+```bash
+poetry run python src/main.py --id 123456 --zoom max --output-dir downloads
+```
+
+Use `--filename-pattern` to customize the shared base name of the generated files.
+The pattern uses Python `str.format(...)` placeholders.
+
+Available placeholders include:
+
+- `id`
+- `name`
+- `date`
+- `location`
+- `width`
+- `height`
+- `origin`
+- `spectral`
+- `zoom`
+
+Example:
+
+```bash
+poetry run python src/main.py --id 123456 --zoom max --filename-pattern "{date}_{id}_{zoom}"
 ```

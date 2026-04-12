@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import pytest
+import core
 
 from main import cli_args, main, parse_image_id
 
@@ -19,6 +20,20 @@ def test_cli_args_output_dir_override():
     args = cli_args(["--output-dir", "downloads", "--id", "123", "--zoom", "max"])
 
     assert args.output_dir == "downloads"
+
+
+def test_cli_args_filename_pattern_default():
+    """Test that the file-name pattern defaults to the core default."""
+    args = cli_args([])
+
+    assert args.filename_pattern == core.DEFAULT_FILENAME_PATTERN
+
+
+def test_cli_args_filename_pattern_override():
+    """Test parsing the file-name pattern override argument."""
+    args = cli_args(["--filename-pattern", "{id}_{zoom}", "--id", "123", "--zoom", "max"])
+
+    assert args.filename_pattern == "{id}_{zoom}"
 
 
 def test_parse_image_id_rejects_non_positive_integer():

@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - New CLI parameter `--output-dir` to specify the destination directory for downloaded files.
+- New CLI parameter `--filename-template` to customize the naming convention of downloaded files using placeholders.  
 
 ### Changed
 

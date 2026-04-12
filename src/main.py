@@ -138,6 +138,7 @@ def main(argv=None):
                     fixed_zoom_level(args.zoom) if args.zoom else prompt_zoom_level,
                     prompt_interrupt=not (args.id and args.zoom),
                     output_directory=args.output_dir,
+                    filename_pattern=args.filename_pattern,
                 )
             except ValueError as e:
                 console.print(str(e))
@@ -185,6 +186,16 @@ def cli_args(argv) -> Namespace:
         type=str,
         default=".",
         help="Destination directory for downloaded files.",
+    )
+    parser.add_argument(
+        "-n",
+        "--filename-pattern",
+        type=str,
+        default=core.DEFAULT_FILENAME_PATTERN,
+        help=(
+            "Custom file-name pattern using str.format placeholders like "
+            "{name}, {date}, {location}, {id}, {width}, {height}, {origin}, {spectral} and {zoom}."
+        ),
     )
     parser.add_argument(
         "--version",
