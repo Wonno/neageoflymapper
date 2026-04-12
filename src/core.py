@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import os
 import re
+from string import Formatter
 from collections.abc import Callable
 from math import ceil
 from typing import Any
@@ -25,6 +26,7 @@ from kmlgenerator import generator
 from metainfos import Metainfos
 
 REQUEST_TIMEOUT = 8
+DEFAULT_FILENAME_PATTERN = "{name}_{date}_{location}_{id}_{zoom}"
 
 
 def get_features(image_id: int) -> dict:
@@ -95,19 +97,89 @@ def clean_filename(filename: str):
     return re.sub(r"[\x00-\x1f<>:\"/\\|?*]", "-", filename)
 
 
-def determine_outputname(m: Metainfos, zoom: int, output_directory: str = ".") -> str:
+def filename_pattern_fields(metainfos: Metainfos, zoom: int) -> dict[str, Any]:
+    """Build the placeholder mapping for custom file-name patterns.
+
+    Args:
+        metainfos: Metadata for the selected image.
+        zoom: Effective zoom level.
+
+    Returns:
+        Mapping of supported pattern placeholders to their values.
+    """
+    return {
+        "id": metainfos.image_id,
+        "name": metainfos.image_name,
+        "date": metainfos.image_date,
+        "location": metainfos.image_location,
+        "width": metainfos.image_width,
+        "height": metainfos.image_height,
+        "origin": metainfos.image_origin,
+        "spectral": metainfos.image_spectral,
+        "zoom": zoom,
+    }
+
+
+def render_filename_pattern(metainfos: Metainfos, zoom: int, filename_pattern: str) -> str:
+    """Render a file-name pattern to a sanitized base name.
+
+    Args:
+        metainfos: Metadata for the selected image.
+        zoom: Effective zoom level.
+        filename_pattern: ``str.format`` pattern for the output base name.
+
+    Returns:
+        Sanitized file-name stem.
+
+    Raises:
+        ValueError: If the pattern is invalid, uses unknown placeholders, or renders an empty name.
+    """
+    fields = filename_pattern_fields(metainfos, zoom)
+    formatter = Formatter()
+    available_fields = ", ".join(sorted(fields))
+
+    for _, field_name, _, _ in formatter.parse(filename_pattern):
+        if field_name is None:
+            continue
+        if field_name not in fields:
+            raise ValueError(
+                f"Unknown filename pattern field '{field_name}'. Available fields: {available_fields}"
+            )
+
+    try:
+        output_name = filename_pattern.format(**fields)
+    except KeyError as error:
+        raise ValueError(
+            f"Unknown filename pattern field '{error.args[0]}'. Available fields: {available_fields}"
+        ) from error
+    except ValueError as error:
+        raise ValueError(f"Invalid filename pattern: {error}") from error
+
+    output_name = clean_filename(output_name).strip()
+    if not output_name:
+        raise ValueError("Filename pattern must render a non-empty file name.")
+
+    return output_name
+
+
+def determine_outputname(
+    m: Metainfos,
+    zoom: int,
+    output_directory: str = ".",
+    filename_pattern: str = DEFAULT_FILENAME_PATTERN,
+) -> str:
     """Build a unique output path without file extension.
 
     Args:
         m: Metadata for the selected image.
         zoom: Effective zoom level.
         output_directory: Directory where output files should be stored.
+        filename_pattern: ``str.format`` pattern for the output base name.
 
     Returns:
         Output path without a file extension.
     """
-    output_name = f"{m.image_name}_{m.image_date}_{m.image_location}_{m.image_id}_{zoom}"
-    output_name = clean_filename(output_name)
+    output_name = render_filename_pattern(m, zoom, filename_pattern)
 
     path = os.path.join(output_directory, output_name)
     i = 2
@@ -122,7 +194,17 @@ def main(
     zoom_level_callback: Callable[[int, int], int],
     prompt_interrupt: bool = True,
     output_directory: str = ".",
+    filename_pattern: str = DEFAULT_FILENAME_PATTERN,
 ):
+    """Download one image and write the image, metadata, and KML files.
+
+    Args:
+        image_id: NEA image identifier.
+        zoom_level_callback: Callback resolving the effective zoom level.
+        prompt_interrupt: Whether to pause for confirmation before download.
+        output_directory: Destination directory for generated files.
+        filename_pattern: ``str.format`` pattern for the output base name.
+    """
     console.print(f"Fetching info for {image_id}...")
     console.print()
 
@@ -152,7 +234,7 @@ def main(
         console.print()
 
     os.makedirs(output_directory, exist_ok=True)
-    path = determine_outputname(metainfos, zoom, output_directory)
+    path = determine_outputname(metainfos, zoom, output_directory, filename_pattern)
     image_path = f"{path}.jpg"
 
     img = download_all(((image_width, image_height), tile_list))
