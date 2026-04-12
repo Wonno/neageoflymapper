@@ -11,6 +11,7 @@
 [![GitHub pull-requests](https://img.shields.io/github/issues-pr/Wonno/neageoflymapper.svg)](https://github.com/Wonno/neageoflymapper/pull/)
 ![Terminal](https://badgen.net/badge/icon/terminal?icon=terminal&label)
 ![semver](https://img.shields.io/badge/semver-2.0.0-blue)
+![Keep a Changelog](https://img.shields.io/badge/keep%20a%20changelog-1.1.0-orange)
 
 ------------------------------------------------------------------------------------------------------------------------
 

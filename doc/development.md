@@ -3,7 +3,7 @@
 ## 📋 Requirements
 
 - 🐍 Python 3.11.13
-- 📦 Poetry
+- 📦 Poetry 2.3.3
 
 ## 🚀 Setup
 
@@ -33,8 +33,52 @@ poetry config virtualenvs.in-project true
 
 ### 3. 🧶 Install Dependencies
 
+Install dependencies including optional build tooling
+
 ```bash
-poetry install
+poetry install --with build
+```
+
+## 🔄 Updating Dependencies
+
+Use Poetry to update dependencies instead of `pip`.
+
+Update all locked dependencies to the newest versions allowed by `pyproject.toml`:
+
+```bash
+poetry update
+```
+
+Update one dependency:
+
+```bash
+poetry update requests
+```
+
+Add a new runtime dependency:
+
+```bash
+poetry add requests
+```
+
+Add a dependency to a specific group:
+
+```bash
+poetry add --group test pytest-mock
+poetry add --group build pyinstaller
+```
+
+Remove a dependency:
+
+```bash
+poetry remove requests
+poetry remove --group test pytest-mock
+```
+
+After dependency changes, reinstall the environment with the groups you need:
+
+```bash
+poetry install --with build
 ```
 
 ## 💻 Usage
@@ -64,7 +108,7 @@ poetry run pytest
 Run the linter using pylint:
 
 ```bash
-poetry run pylint src/main.py tests/
+poetry run pylint src/main.py src tests
 ```
 
 ## 🔨 Building the Binary
@@ -72,6 +116,7 @@ poetry run pylint src/main.py tests/
 To create a standalone executable:
 
 ```bash
+poetry install --with build
 poetry run pyinstaller --onefile src/main.py --name nea-geofly-mapper
 ```
 
