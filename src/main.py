@@ -140,6 +140,7 @@ def main(argv=None):
                     output_directory=args.output_dir,
                     filename_pattern=args.filename_pattern,
                     no_download=args.no_download,
+                    no_kml=args.no_kml,
                 )
             except ValueError as e:
                 console.print(str(e))
@@ -202,6 +203,11 @@ def cli_args(argv) -> Namespace:
         "--no-download",
         action="store_true",
         help="Skip downloading and saving the stitched image file.",
+    )
+    parser.add_argument(
+        "--no-kml",
+        action="store_true",
+        help="Skip generating and saving the KML file.",
     )
     parser.add_argument(
         "--version",

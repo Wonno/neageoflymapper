@@ -43,7 +43,7 @@ You can call application directly with some arguments to skip interactive prompt
 ```text
 $ poetry run python src/main.py -h
 usage: main.py [-h] [-i ID [ID ...]] [-z ZOOM] [-o OUTPUT_DIR]
-               [-n FILENAME_PATTERN] [--no-download] [--version]
+               [-n FILENAME_PATTERN] [--no-download] [--no-kml] [--version]
 
 Downloads an Image by ID from https://nea.geofly.eu.
 If not arguments are set, values will be prompted for interactively.
@@ -60,6 +60,7 @@ options:
                         {name}, {date}, {location}, {id},
                         and {zoom}.
   --no-download         Skip downloading and saving the stitched image file.
+  --no-kml              Skip generating and saving the KML file.
   --version             Show the application version and exit.
 
 Version: 0.0.0
@@ -76,6 +77,12 @@ files without downloading or storing the stitched image:
 
 ```bash
 poetry run python src/main.py --id 123456 --zoom max --no-download
+```
+
+Use `--no-kml` to skip writing the `.kml` file while still saving the other outputs:
+
+```bash
+poetry run python src/main.py --id 123456 --zoom max --no-kml
 ```
 
 Use `--filename-pattern` to customize the shared base name of the generated files.
