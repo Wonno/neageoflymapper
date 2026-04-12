@@ -29,7 +29,6 @@ jobs:
       with:
         python-version: ${{ env.PYTHON_VERSION }}
 
-
     - name: Install Poetry
       uses: snok/install-poetry@v1
       with:
@@ -57,7 +56,7 @@ jobs:
     - name: Install dependencies
       if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
       run: |
-        poetry install --no-interaction --no-root
+        poetry install --no-interaction --no-root --with=build
 
     - name: Run Linting
       if: matrix.os == 'ubuntu-latest'
