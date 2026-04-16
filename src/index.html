@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <title>Bookmarklet Installer</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', 'Arial', sans-serif;
+      min-height: 100vh;
+      background: #f7f7fa;
+      color: #222;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 14px;
+      box-shadow: 0 2px 16px 0 rgba(0,0,0,0.08), 0 1.5px 4px 0 rgba(0,0,0,0.04);
+      padding: 2.2rem 2.5rem 2.5rem 2.5rem;
+      max-width: 480px;
+      width: 95%;
+      text-align: center;
+      border: 1px solid #ececf0;
+    }
+
+    h1 {
+      font-size: 2.1rem;
+      font-weight: 600;
+      margin-bottom: 1.2rem;
+      color: #1a237e;
+      letter-spacing: -0.5px;
+    }
+
+    .bookmarklet {
+      display: inline-block;
+      padding: 0.6rem 1.3rem;
+      border-radius: 7px;
+      background: #e3f0ff;
+      border: 1px solid #2196f3;
+      color: #1565c0;
+      text-decoration: none;
+      font-size: 1.05rem;
+      font-weight: 500;
+      margin-bottom: 0.5rem;
+      transition: background 0.18s, color 0.18s;
+    }
+    .bookmarklet:hover {
+      background: #bbdefb;
+      color: #0d47a1;
+      text-decoration: underline;
+    }
+
+    .hint {
+      margin-top: 0.7rem;
+      font-size: 0.92rem;
+      color: #757575;
+    }
+
+    #done-btn {
+      margin-top: 2.1rem;
+      padding: 0.65rem 2.2rem;
+      border: none;
+      border-radius: 7px;
+      background: #0d47a1;
+      color: #fff;
+      font-size: 1.08rem;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 1px 4px 0 rgba(33,150,243,0.08);
+      transition: background 0.18s, opacity 0.18s;
+    }
+    #done-btn:hover {
+      opacity: 0.92;
+      background: #0d47a1;
+    }
+
+    #finished {
+      display: none;
+    }
+    #finished h1 {
+      font-size: 1.7rem;
+      margin-bottom: 1rem;
+      color: #388e3c;
+    }
+    #finished p {
+      color: #757575;
+      font-size: 1.01rem;
+      margin-top: 0.5rem;
+    }
+    #finished a {
+      color: #1976d2;
+      text-decoration: underline;
+    }
+    #finished a:hover {
+      color: #0d47a1;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+  <h1>Bookmarklet Installer</h1>
+  <a class="bookmarklet" href="javascript:(function()%7Bu%3D%22nea.geofly.eu%22%2Cwindow.location.host%3D%3Du%3F(m%3D%22Image-ID%20copied%20to%20Clipboard%3A%5Cn%22%2Bviewer.activeBildId%2Cnavigator.clipboard.writeText(viewer.activeBildId))%3Am%3D%22Bookmarklet%20works%20only%20on%20https%3A%2F%2F%22%2Bu%2Calert(m)%3B%7D)()%3B">NEA GeoFly Bookmarklet</a>
+  <p class="hint">Drag the link above to your bookmarks bar to install</p>
+  <button id="done-btn">Done</button>
+  </div>
+  <div class="card" id="finished">
+    <h1>&#10003; All done!</h1>
+    <p>Your bookmarklet is ready to use.</p>
+
+    <p>Redirecting to <a href="https://nea.geofly.eu">https://nea.geofly.eu</a> <span id="countdown">5</span></p>
+  </div>
+  <script>
+    document.getElementById("done-btn").addEventListener("click", function () {
+      document.querySelector(".card:not(#finished)").style.display = "none";
+      var fin = document.getElementById("finished");
+      fin.style.display = "block";
+      fetch("/done").catch(function () {});
+      var secs = 5;
+      var el = document.getElementById("countdown");
+      var iv = setInterval(function () {
+        secs--;
+        el.textContent = secs;
+        if (secs <= 0) {
+          clearInterval(iv);
+          window.location.href = "https://nea.geofly.eu/";
+        }
+      }, 1000);
+    });
+  </script>
+</body>

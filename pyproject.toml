@@ -49,7 +49,7 @@ console = true
 [tool.poetry-pyinstaller-plugin.targets.nea-geofly-mapper]
 source = "src/main.py"
 type = "onefile"
-include = { "pyproject.toml" = "." }
+include = { "pyproject.toml" = ".", "src/index.html" = "." }
 
 [tool.poetry.requires-plugins]
 poetry-pyinstaller-plugin = { version = ">=2.0.0,<3.0.0", extras = ["plugin"] }

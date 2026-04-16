@@ -267,8 +267,26 @@ def main(
     console.print(f"\n:floppy_disk:  Saved to [i]{image_path}[/i]")
 
 
-def info_summary(image_height: int | Any, image_width: int | Any, metainfos: Metainfos,
-                 tile_list: list[tuple[int, int, str]], zoom: int):
+def info_summary(
+    image_height: int | Any,
+    image_width: int | Any,
+    metainfos: Metainfos,
+    tile_list: list[tuple[int, int, str]],
+    zoom: int
+):
+    """
+    Create a summary table of image metadata and download parameters.
+
+    Args:
+        image_height (int | Any): The height of the image in pixels.
+        image_width (int | Any): The width of the image in pixels.
+        metainfos (Metainfos): Metadata object containing image properties.
+        tile_list (list[tuple[int, int, str]]): List of tile coordinates and URLs.
+        zoom (int): The selected zoom level.
+
+    Returns:
+        Table: A Rich Table object with the summary information.
+    """
     table = Table(show_header=False)
     table.add_column("Key")
     table.add_column("Value")

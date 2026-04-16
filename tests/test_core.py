@@ -2,11 +2,10 @@
 
 from pathlib import Path
 from types import SimpleNamespace
-from unittest.mock import MagicMock, patch
 
 import pytest
 
-from core import determine_outputname, main, render_filename_pattern
+from core import determine_outputname, render_filename_pattern
 
 
 def create_metainfos():
