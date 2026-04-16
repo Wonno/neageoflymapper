@@ -1,6 +1,6 @@
 [project]
 name = "nea-geofly-mapper"
-version = "0.1.8"
+version = "0.1.9"
 description = "Download and stitch map tiles to a single photo from https://nea.geofly.eu/"
 authors = [
     { name = "fabyr" },
