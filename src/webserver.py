@@ -16,6 +16,7 @@ from app_console import console
 # Read the HTML content to be served from the 'index.html' file located in the same directory as this script.
 HTML = pathlib.Path(__file__).with_name("index.html").read_text(encoding="utf-8")
 
+
 class Handler(BaseHTTPRequestHandler):
     """
     HTTP request handler for serving the bookmarklet installer page.
@@ -44,7 +45,7 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(HTML.encode())
 
-    def log_message(self, format, *args):
+    def log_message(self, *args):
         """
         Override to suppress default HTTP request logging.
         """
@@ -74,7 +75,12 @@ def webserver():
     port = get_free_port()
     server = HTTPServer(("localhost", port), Handler)
     url = f"http://localhost:{port}"
-    console.print(f"Starting webserver on {url} for manual Bookmarklet setup...")
     # Open the browser after a short delay to ensure the server is ready.
-    threading.Timer(0.1, lambda: webbrowser.open(url)).start()
-    server.serve_forever()
+    try:
+        console.print(f"Starting webserver on {url} for manual Bookmarklet setup...")
+        threading.Timer(0.1, lambda: webbrowser.open(url)).start()
+        server.serve_forever()
+    except KeyboardInterrupt:
+        console.print("Stopping webserver...")
+    finally:
+        server.server_close()
