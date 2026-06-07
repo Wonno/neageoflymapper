@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - dependency updates
+- improve integrated webserver start/stop
 
 ## [0.1.9] - 2026-04-16
 
