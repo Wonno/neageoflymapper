@@ -30,11 +30,11 @@ jobs:
       with:
         python-version: ${{ env.PYTHON_VERSION }}
 
-    - name: Install Poetry
-      uses: snok/install-poetry@a783c322200f0519c7926aa6faa857c4e23e9263 # v1.4.2
-      with:
-        virtualenvs-create: true
-        virtualenvs-in-project: true
+#    - name: Install Poetry
+#      uses: snok/install-poetry@a783c322200f0519c7926aa6faa857c4e23e9263 # v1.4.2
+#      with:
+#        virtualenvs-create: true
+#        virtualenvs-in-project: true
 
     - name: Add Poetry to PATH (Windows)
       if: matrix.os == 'windows-latest'
@@ -55,7 +55,6 @@ jobs:
         key: venv-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
 
     - name: Install dependencies
-      if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
       run: |
         poetry install --no-interaction --no-root --all-groups
 
