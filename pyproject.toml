@@ -28,7 +28,7 @@ build-backend = "poetry.core.masonry.api"
 test = [
     "pytest (>=9.0.2,<10.0.0)",
     "pytest-cov (>=7.1.0,<8.0.0)",
-    "pylint (>=4.0.5,<5.0.0)",
+    "pylint (>=4.0.7,<5.0.0)",
     "pytest-github-report (>=0.0.1,<0.0.2)",
 ]
 
