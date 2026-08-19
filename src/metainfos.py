@@ -31,6 +31,7 @@ class Metainfos:
         image_origin (str): Origin of the image.
         image_available (str): Image availability
         image_spectral (str): Spectral attribute of the image
+o        image_orientation (float): Clockwise rotation (in radians).
     """
 
     image_id: int
@@ -50,6 +51,7 @@ class Metainfos:
     image_origin = None
     image_available = None
     image_spectral = None
+    image_orientation = 0.0
 
     zoom_min: int
     zoom_max: int
@@ -83,6 +85,12 @@ class Metainfos:
 
         self.zoom_min = int(feature["properties"]["image_minzoom"])
         self.zoom_max = int(feature["properties"]["image_maxzoom"])
+
+        altered_orientation = feature["properties"].get("alteredorientation")
+        if altered_orientation is not None:
+            self.image_orientation = float(altered_orientation)
+        else:
+            self.image_orientation = float(feature["properties"].get("orientation") or 0.0)
 
     # noinspection PyMethodMayBeStatic
     def __get_image_name_from_feature(self, feature: dict):

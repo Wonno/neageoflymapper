@@ -61,6 +61,12 @@ def cli_args(argv) -> Namespace:
         ),
     )
     parser.add_argument(
+        "--north",
+        "--rotate",
+        action="store_true",
+        help="Rotate image to true north.",
+    )
+    parser.add_argument(
         "--no-download",
         action="store_true",
         help="Skip downloading and saving the stitched image file.",
