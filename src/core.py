@@ -10,7 +10,7 @@ import os
 import re
 from string import Formatter
 from collections.abc import Callable
-from math import ceil
+from math import ceil, degrees
 from typing import Any
 from urllib.parse import quote, urlencode
 
@@ -30,6 +30,14 @@ DEFAULT_FILENAME_PATTERN = "{name}_{date}_{location}_{id}_{zoom}"
 
 
 def get_features(image_id: int) -> dict:
+    """Fetch raw JSON from the NEA for the given image id.
+
+    Args:
+        image_id: Numeric NEA image identifier.
+
+    Returns:
+        Parsed JSON response as a dict.
+    """
     params = {
         "bild_id": str(image_id),
     }
@@ -44,6 +52,15 @@ def get_features(image_id: int) -> dict:
 
 
 def construct_all_meta(metainfos: Metainfos, for_zoom_level: int):
+    """Compute overall image dimensions and the list of tile URLs for a certain zoom level.
+
+    Args:
+        metainfos: Metadata for the image.
+        for_zoom_level: Desired zoom level.
+
+    Returns:
+        A tuple of (width, height) and a list of (x_offset, y_offset, url).
+    """
     if for_zoom_level < metainfos.zoom_min or for_zoom_level > metainfos.zoom_max:
         raise ValueError(f"Invalid zoom level. max = {metainfos.zoom_max}; min = {metainfos.zoom_min}")
 
@@ -66,6 +83,15 @@ def construct_all_meta(metainfos: Metainfos, for_zoom_level: int):
 
 
 def download_all(meta: tuple[tuple[int, int], list]) -> Image.Image:
+    """Download all tiles and assemble them into a single image.
+
+    Args:
+        meta: Tuple of ((width, height), tile_list) where tile_list items are
+              (x_offset, y_offset, url).
+
+    Returns:
+        A Image containing the stitched tiles.
+    """
     image_size, tile_list = meta
     img = Image.new("RGBA", image_size, 0)
 
@@ -90,6 +116,26 @@ def download_all(meta: tuple[tuple[int, int], list]) -> Image.Image:
                 p.remove_task(t)
                 console.print("\n :stop_button: Interrupting download.")
     return img
+
+
+def align_to_true_north(img: Image.Image, metainfos: Metainfos) -> Image.Image:
+    """Rotate image so it is aligned to true north.
+
+    Args:
+        img: image
+        metainfos: Metadata providing ``image_orientation``.
+
+    Returns:
+        Image.Image: A new, aligned to true north oriented image (expanded to fit all corners).
+    """
+    if not metainfos.image_orientation:
+        return img
+
+    # ``PIL.Image.rotate`` rotates counter-clockwise for positive angles,
+    # so the clockwise orientation angle must be negated.
+    return img.rotate(
+        -degrees(metainfos.image_orientation), expand=True, resample=Image.Resampling.BICUBIC
+    )
 
 
 def clean_filename(filename: str):
@@ -188,7 +234,6 @@ def determine_outputname(
         i += 1
     return path
 
-
 def main(
     image_id: int,
     zoom_level_callback: Callable[[int, int], int],
@@ -198,7 +243,8 @@ def main(
     no_download: bool = False,
     no_kml: bool = False,
     no_txt: bool = False,
-):
+    rotate: bool = False,
+): # pylint: disable=R0913,R0914,R0917
     """Download one image and write the image, metadata, and KML files.
 
     Args:
@@ -210,6 +256,7 @@ def main(
         no_download: Whether to skip downloading and saving the stitched image.
         no_kml: Whether to skip generating and saving the KML file.
         no_txt: Whether to skip generating and saving the metadata text file.
+        rotate: Whether to rotate and align to true north if possible.
     """
     console.print(f"Fetching info for {image_id}...")
     console.print()
@@ -247,6 +294,8 @@ def main(
 
     if not no_download:
         img = download_all(((image_width, image_height), tile_list))
+        if rotate:
+            img = align_to_true_north(img, metainfos)
         img.convert("RGB").save(image_path, quality=95)
 
     if not no_txt:

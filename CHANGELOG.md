@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Added
+- `--north` rotation feature for downloaded images
+
+### Fixes
+- Pillow dependency update to fix security vulnerability
+
 ## [0.1.10] - 2026-06-26
 
 ### Changed
