@@ -4,7 +4,9 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
+from PIL import Image
 
+import core
 from core import determine_outputname, render_filename_pattern
 
 
@@ -91,3 +93,35 @@ def test_determine_outputname_deduplicates_with_existing_txt(tmp_path):
     )
 
     assert Path(path) == tmp_path / "2026-04-12_123_5 (2)"
+
+
+def test_main_saves_image_when_exif_is_unavailable(tmp_path, monkeypatch):
+    """Test JPEG saving does not pass None as the EXIF option."""
+    metainfos = SimpleNamespace(
+        image_available=True,
+        zoom_min=1,
+        zoom_max=5,
+    )
+    monkeypatch.setattr(
+        core,
+        "get_features",
+        lambda image_id: {"data": {"images": {"features": [{}]}}},
+    )
+    monkeypatch.setattr(core, "Metainfos", lambda image_id, feature: metainfos)
+    monkeypatch.setattr(core, "construct_all_meta", lambda metadata, zoom: ((1, 1), []))
+    monkeypatch.setattr(core, "info_summary", lambda *args: "")
+    monkeypatch.setattr(core, "determine_outputname", lambda *args: str(tmp_path / "output"))
+    monkeypatch.setattr(core, "download_all", lambda meta: Image.new("RGB", (1, 1)))
+    monkeypatch.setattr(core, "get_exif_bytes", lambda metadata: None)
+    monkeypatch.setattr(core, "write_iptc", lambda image_path, metadata: None)
+
+    core.main(
+        123,
+        zoom_level_callback=lambda minimum, maximum: maximum,
+        prompt_interrupt=False,
+        output_directory=str(tmp_path),
+        no_kml=True,
+        no_txt=True,
+    )
+
+    assert (tmp_path / "output.jpg").is_file()
