@@ -133,7 +133,7 @@ def main(argv=None):
                     no_download=args.no_download,
                     no_kml=args.no_kml,
                     no_txt=args.no_txt,
-                    rotate=args.north,
+                    rotate=args.rotate,
                 )
             except ValueError as e:
                 console.print(str(e))
