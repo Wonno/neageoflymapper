@@ -61,8 +61,9 @@ def cli_args(argv) -> Namespace:
         ),
     )
     parser.add_argument(
-        "--north",
+        "-r",
         "--rotate",
+        "--north",
         action="store_true",
         help="Rotate image to true north.",
     )
