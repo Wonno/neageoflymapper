@@ -22,6 +22,7 @@ import requests
 from PIL import Image
 
 from app_console import console
+from exif_writer import get_exif_bytes, write_iptc
 from kmlgenerator import generator
 from metainfos import Metainfos
 
@@ -296,7 +297,15 @@ def main(
         img = download_all(((image_width, image_height), tile_list))
         if rotate:
             img = align_to_true_north(img, metainfos)
-        img.convert("RGB").save(image_path, quality=95)
+        exif_bytes = get_exif_bytes(metainfos)
+        convert = img.convert("RGB")
+        save_options: dict[str, Any] = {"quality": 95}
+        if exif_bytes is not None:
+            save_options["exif"] = exif_bytes
+        convert.save(image_path, **save_options)
+
+        # write IPTC metadata
+        write_iptc(image_path, metainfos)
 
     if not no_txt:
         with open(text_path, "w", encoding="utf-8") as fp:
