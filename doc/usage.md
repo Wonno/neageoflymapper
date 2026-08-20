@@ -21,7 +21,7 @@ You can call application directly with some arguments to skip interactive prompt
 
 ```text
 $ poetry run python src/main.py -h
-usage: main.py [-h] [-i ID [ID ...]] [-z ZOOM] [-o OUTPUT_DIR] [-n FILENAME_PATTERN] [--no-download] [--no-kml] [--no-txt] [-b] [-v]
+usage: main.py [-h] [-i ID [ID ...]] [-z ZOOM] [-o OUTPUT_DIR] [-n FILENAME_PATTERN] [-r] [--no-download] [--no-kml] [--no-txt] [-b] [-v]
 
 Downloads an Image by ID from https://nea.geofly.eu.
 If not arguments are set, values will be prompted for interactively.
@@ -34,6 +34,8 @@ options:
                         Destination directory for downloaded files.
   -n, --filename-pattern FILENAME_PATTERN
                         Custom file-name pattern using str.format placeholders like {name}, {date}, {location}, {id}, {width}, {height}, {origin}, {spectral} and {zoom}.
+  -r, --rotate, --north
+                        Rotate image to true north.
   --no-download         Skip downloading and saving the stitched image file.
   --no-kml              Skip generating and saving the KML file.
   --no-txt              Skip generating and saving the metadata text file.
@@ -43,7 +45,7 @@ Setup:
 
 Version:
   -v, --version         Show the application version and exit.
-
+  
 Version: 0.0.0
 ```
 
