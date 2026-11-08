@@ -2,8 +2,8 @@
 
 ## 📋 Requirements
 
-- 🐍 Python 3.11.13
-- 📦 Poetry 2.3.3
+- 🐍 Python 3.14.x
+- 📦 Poetry 2.5.1
 
 ## 🚀 Setup
 
