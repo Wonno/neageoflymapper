@@ -47,7 +47,7 @@ def generator(metainfos):
               </ul>"""
     mg = geometry.MultiGeometry(kml_geometries=[point, line])
     pm = kml.Placemark(name=f"{metainfos.image_name}",
-                       # TODO: how to properly wrap description CDATA?
+                       # https://github.com/cleder/fastkml/pull/542 should properly wrap description CDATA
                        description=desc,
                        id=f"{metainfos.image_name}",
                        kml_geometry=mg)
