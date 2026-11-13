@@ -97,7 +97,7 @@ jobs:
             asset_name: neageoflymapper-linux
           - os: windows-latest
             asset_name: neageoflymapper-windows.exe
-          - os: macos-latest
+          - os: macos-15
             asset_name: neageoflymapper-macos
     runs-on: ${{ matrix.os }}
 
