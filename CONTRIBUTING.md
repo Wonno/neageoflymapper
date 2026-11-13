@@ -4,8 +4,8 @@ Thank you for your interest in contributing! To maintain high code quality and c
 
 ## Development Environment Setup
 
-1. **Python Version**: Ensure you are using Python 3.11.13.
-2. **Install Poetry**: Follow the instructions in the [README.md](./README.md#1-install-poetry).
+1. **Python Version**: Ensure you are using Python 3.14.x.
+2. **Install Poetry**: Follow the instructions https://python-poetry.org/docs/#installation
 3. **Install Dependencies**:
    ```bash
    poetry install
