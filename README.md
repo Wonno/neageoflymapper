@@ -1,4 +1,4 @@
-# NEA GeoFly Mapper
+# NEA GeoFly Mapper 🌍
 
 [![Build](https://github.com/Wonno/neageoflymapper/actions/workflows/ci.yml/badge.svg)](https://github.com/Wonno/neageoflymapper/actions/workflows/ci.yml)
 [![made-with-python](https://img.shields.io/badge/Made%20with-Python-1f425f.svg)](https://www.python.org/)
@@ -14,9 +14,19 @@
 ![Dependabot](https://img.shields.io/badge/dependabot-active-brightgreen?logo=dependabot)
 ![Keep a Changelog](https://img.shields.io/badge/keep%20a%20changelog-1.1.0-orange)
 
+
 ------------------------------------------------------------------------------------------------------------------------
 
-Download and stitch tiles to a single photo from [NEA Viewer](https://nea.geofly.eu/) of various zoom levels.
+ℹ️ Download and stitch tiles to a single photo from [NEA Viewer](https://nea.geofly.eu/).  
+
+## Features 🚀
+
+- Download images by one or more NEA image IDs, choosing a **zoom level** or the available minimum/maximum.
+- **Stitch image tiles** into a single JPEG, with an option to align the image to **true north**.
+- Save image metadata as **EXIF/IPTC** in the JPEG and as a separate text file.
+- Generate a **KML** file with the image center and outline for mapping applications.
+- Choose an output directory and customized output filename.
+- Install a browser **bookmarklet** to extract an image ID from NEA Viewer.
 
 ------------------------------------------------------------------------------------------------------------------------
 
