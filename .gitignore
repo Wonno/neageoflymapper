@@ -11,9 +11,6 @@ build/
 dist/
 *.spec
 
-# Local config
-.tool-versions
-
 # Coverage
 /htmlcov/
 .coverage
