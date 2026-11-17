@@ -6,19 +6,21 @@ assembling the tiles into a complete image, and saving metadata and KML files.
 
 from __future__ import annotations
 
+import asyncio
 import os
 import re
+from io import BytesIO
 from string import Formatter
 from collections.abc import Callable
 from math import ceil, degrees
 from typing import Any
-from urllib.parse import quote, urlencode
+from urllib.parse import quote
 
-from requests import RequestException
-from rich.progress import Progress
+import httpx
+from httpx_retries import Retry, RetryTransport
+from rich.progress import Progress, TaskID
 from rich.table import Table
 
-import requests
 from PIL import Image
 
 from app_console import console
@@ -27,7 +29,38 @@ from kmlgenerator import generator
 from metainfos import Metainfos
 
 REQUEST_TIMEOUT = 8
+DOWNLOAD_CONCURRENCY = 20
 DEFAULT_FILENAME_PATTERN = "{name}_{date}_{location}_{id}_{zoom}"
+
+
+def create_http_client() -> httpx.Client:
+    """Create an HTTP/2 client that retries transient request failures three times."""
+    transport = RetryTransport(
+        transport=httpx.HTTPTransport(http2=True),
+        retry=Retry(total=3, status_forcelist={0, 429, 500, 502, 503, 504}),
+    )
+    return httpx.Client(transport=transport)
+
+
+def create_async_http_client() -> httpx.AsyncClient:
+    """Create a concurrent HTTP/2 client with three retries for transient failures."""
+
+    async def validate_response(response: httpx.Response) -> None:
+        """Read the full response so mid-body protocol errors can be retried."""
+        await response.aread()
+
+    transport = RetryTransport(
+        transport=httpx.AsyncHTTPTransport(
+            http2=True,
+            limits=httpx.Limits(max_connections=DOWNLOAD_CONCURRENCY),
+        ),
+        retry=Retry(
+            total=3,
+            status_forcelist={0, 429, 500, 502, 503, 504},
+            validate_response=validate_response,
+        ),
+    )
+    return httpx.AsyncClient(transport=transport)
 
 
 def get_features(image_id: int) -> dict:
@@ -39,17 +72,15 @@ def get_features(image_id: int) -> dict:
     Returns:
         Parsed JSON response as a dict.
     """
-    params = {
-        "bild_id": str(image_id),
-    }
+    with create_http_client() as client:
+        response = client.get(
+            "https://nea.geofly.eu/api.php/getFeature",
+            params={"bild_id": str(image_id)},
+            timeout=REQUEST_TIMEOUT,
+        )
+        response.raise_for_status()
 
-    response = requests.get(
-        f"https://nea.geofly.eu/api.php/getFeature?{urlencode(params)}",
-        timeout=REQUEST_TIMEOUT,
-    )
-    response.raise_for_status()
-
-    return response.json()
+        return response.json()
 
 
 def construct_all_meta(metainfos: Metainfos, for_zoom_level: int):
@@ -96,27 +127,52 @@ def download_all(meta: tuple[tuple[int, int], list]) -> Image.Image:
     image_size, tile_list = meta
     img = Image.new("RGBA", image_size, 0)
 
-    session = requests.Session()
-    with Progress() as p:
-        t = p.add_task("Downloading...", total=100)
-        while not p.finished:
-            try:
-                for i, (x, y, url) in enumerate(tile_list):
-                    p.update(t, completed=(i + 1) / len(tile_list) * 100,
-                             description=f"Downloading Tile #{i + 1} of {len(tile_list)} [{url}]")
-                    try:
-                        with session.get(
-                            url, stream=True, timeout=REQUEST_TIMEOUT
-                        ) as tile_response:
-                            tile_response.raise_for_status()
-                            with Image.open(tile_response.raw) as tile:
-                                img.paste(tile, box=(x, y))
-                    except RequestException as e:
-                        console.print(f"Downloading Tile #{i + 1} failed: {e}")
-            except KeyboardInterrupt:
-                p.remove_task(t)
-                console.print("\n :stop_button: Interrupting download.")
+    with Progress() as progress:
+        task_id = progress.add_task("Downloading...", total=100)
+        try:
+            asyncio.run(download_tiles(tile_list, img, progress, task_id))
+        except KeyboardInterrupt:
+            progress.remove_task(task_id)
+            console.print("\n :stop_button: Interrupting download.")
     return img
+
+
+async def download_tiles(
+    tile_list: list[tuple[int, int, str]],
+    image: Image.Image,
+    progress: Progress,
+    task_id: TaskID,
+) -> None:
+    """Download and paste image tiles concurrently, up to the configured limit."""
+    if not tile_list:
+        progress.update(task_id, completed=100)
+        return
+
+    queue: asyncio.Queue[tuple[int, int, int, str]] = asyncio.Queue()
+    for index, (x, y, url) in enumerate(tile_list):
+        queue.put_nowait((index, x, y, url))
+
+    async with create_async_http_client() as client:
+        async def worker() -> None:
+            """Download queued tiles and paste each successful response."""
+            while not queue.empty():
+                _index, _x, _y, _url = await queue.get()
+                try:
+                    response = await client.get(_url, timeout=REQUEST_TIMEOUT)
+                    response.raise_for_status()
+                    with Image.open(BytesIO(response.content)) as tile:
+                        image.paste(tile, box=(_x, _y))
+                except httpx.HTTPError as error:
+                    console.print(f"Downloading Tile #{_index + 1} failed: {error}")
+                finally:
+                    progress.update(
+                        task_id,
+                        advance=100 / len(tile_list),
+                        description=f"Downloaded Tile #{_index + 1} of {len(tile_list)}",
+                    )
+                    queue.task_done()
+
+        await asyncio.gather(*(worker() for _ in range(min(DOWNLOAD_CONCURRENCY, len(tile_list)))))
 
 
 def align_to_true_north(img: Image.Image, metainfos: Metainfos) -> Image.Image:
