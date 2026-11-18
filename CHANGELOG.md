@@ -7,8 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [0.2.1] - 2026-11-17
+
+### Changes
+- exchange of http request library speeding up downloads up to 10 times
+
+## [0.2.0] - 2026-11-17
+
 ### Added
 - `--north` rotation feature for downloaded images
+- write exif data to images
 
 ### Fixes
 - Pillow dependency update to fix security vulnerability
